@@ -1,0 +1,46 @@
+@startuml Phone
+
+!include PhoneManager.puml
+!include User.puml 
+!include UserManager.puml
+!include Brand.puml
+!include Client.puml 
+
+Class Phone {
+    
+    - model : string
+    - slug : string
+    - color : string
+    - operator_lock : string
+    - screen_size: decimal
+    - storage_capacity : string
+    - dual_sim : bool
+    - memory : string
+    - megapixels : int
+    - operating_system : string
+    - resolution : string
+    - network : string
+    - manufacturer_reference: string
+    - card_reader : bool
+    - release_year: int
+    - serie : string
+    - head_sar : float
+    - truck_sar : float
+    - card_sim : string
+    - weight : int
+    - height : int
+    - width : int
+    - depth : int
+    - garantee : string
+    - description : string
+    - date : Datetime
+    
+}
+
+User *-"1" Client: create >
+Phone "1"--"1" Brand: have <>
+
+PhoneManager -- Phone: exec
+UserManager -- User: exec
+
+@enduml

@@ -1,0 +1,11 @@
+@startuml PhoneManager
+
+Class PhoneManager {
+
+    + addPhone(User user)
+    + updatePhone(Phone phone User user)
+    + deletePhone(Phone phone User user)
+    
+    }
+
+@enduml
