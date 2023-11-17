@@ -1,0 +1,42 @@
+@startuml UserSequence
+
+skinparam responseCommentBelowArrow true
+skinparam SequenceCommentAlignment center
+
+actor User as User #SteelBlue
+
+entity Phone as Phone #Pink
+
+database BileMo as BileMo #Purple
+
+User -> BileMo: créer un compte
+alt cas réussi
+BileMo-> User: valider création du compte
+else email déjà existant 
+BileMo-> User: échec de l'inscription
+
+User -> BileMo: demander authentification 
+BileMo-> User: valider authentification 
+else identification invalides
+BileMo-> User: échec de l'authentification
+
+User -> Phone: consulter liste des téléphones
+Phone -> User: afficher tous les téléphones
+
+User -> User: ajout d'un utilisateur
+User -> User: valider ajout utilisateur
+else échec ajout utilisateur
+User -> User: le champ email ne peut être vide
+
+User -> User: consulter fiche utilisateur
+User -> User: afficher utilisateur
+else 404
+User -> User: cette utilisateur n'existe pas
+
+User -> User: supprimer un utilisateur
+User -> User: valider suppression utilisateur
+
+
+
+end
+@enduml
