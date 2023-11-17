@@ -1,0 +1,10 @@
+@startuml Client
+
+Class Client {
+    
+    - name : string
+    - slug : string
+
+}
+
+@enduml

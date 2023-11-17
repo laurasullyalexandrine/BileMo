@@ -1,0 +1,10 @@
+@startuml Brand
+
+Class Brand {
+    
+    - name : string
+    - slug : string
+
+}
+
+@enduml
