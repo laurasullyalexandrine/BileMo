@@ -3,27 +3,21 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use App\Repository\BrandRepository;
-use Gedmo\Mapping\Annotation as Gedmo;
+use App\Repository\ImageRepository;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-#[ORM\Entity(repositoryClass: BrandRepository::class)]
-class Brand
+#[ORM\Entity(repositoryClass: ImageRepository::class)]
+class Image
 {
+    const BASE_PATH = 'upload/image';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 180)]
+    #[ORM\Column(length: 255)]
     private ?string $name = null;
-
-    /**
-     * @Gedmo\Slug(fields={"name"})
-     *
-     * @var string|null
-     */
-    #[ORM\Column(length: 128)]
-    private ?string $slug = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
@@ -38,7 +32,7 @@ class Brand
 
     public function __toString()
     {
-        return $this->name;
+        return self::BASE_PATH . '/' . $this->name;
     }
 
     public function getId(): ?int
@@ -54,18 +48,6 @@ class Brand
     public function setName(string $name): static
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    public function getSlug(): ?string
-    {
-        return $this->slug;
-    }
-
-    public function setSlug(string $slug): static
-    {
-        $this->slug = $slug;
 
         return $this;
     }
