@@ -2,8 +2,8 @@
 
 Class ImageManager {
 
-    + uploadImage(Image Image, Trick trick)
-    + updateImage(Image Image, Trick trick)
-    + deleteImage(Image Image, Trick trick)
+    + uploadImage(Image Image, Phone Phone)
+    + updateImage(Image Image, Phone Phone)
+    + deleteImage(Image Image, Phone Phone)
 
 }
