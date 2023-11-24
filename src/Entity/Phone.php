@@ -44,46 +44,16 @@ class Phone
     private ?bool $dual_sim = null;
 
     #[ORM\Column(length: 10)]
-    private ?string $memory = null;
-
-    #[ORM\Column]
-    private ?int $megapixels = null;
-
-    #[ORM\Column(length: 10)]
     private ?string $operating_system = null;
-
-    #[ORM\Column(length: 34)]
-    private ?string $resolution = null;
 
     #[ORM\Column(length: 5)]
     private ?string $network = null;
-
-    #[ORM\Column(length: 10, nullable: true)]
-    private ?string $manufacturer_reference = null;
 
     #[ORM\Column]
     private ?bool $card_reader = null;
 
     #[ORM\Column]
     private ?int $release_year = null;
-
-    #[ORM\Column(length: 34)]
-    private ?string $serie = null;
-
-    #[ORM\Column(length: 84)]
-    private ?string $card_sim = null;
-
-    #[ORM\Column(length: 10)]
-    private ?string $weight = null;
-
-    #[ORM\Column(length: 10)]
-    private ?string $height = null;
-
-    #[ORM\Column(length: 10)]
-    private ?string $width = null;
-
-    #[ORM\Column(length: 10)]
-    private ?string $depth = null;
 
     #[ORM\Column(length: 10)]
     private ?string $garantee = null;
@@ -203,30 +173,6 @@ class Phone
         return $this;
     }
 
-    public function getMemory(): ?string
-    {
-        return $this->memory;
-    }
-
-    public function setMemory(string $memory): static
-    {
-        $this->memory = $memory;
-
-        return $this;
-    }
-
-    public function getMegapixels(): ?int
-    {
-        return $this->megapixels;
-    }
-
-    public function setMegapixels(int $megapixels): static
-    {
-        $this->megapixels = $megapixels;
-
-        return $this;
-    }
-
     public function getOperatingSystem(): ?string
     {
         return $this->operating_system;
@@ -239,18 +185,6 @@ class Phone
         return $this;
     }
 
-    public function getResolution(): ?string
-    {
-        return $this->resolution;
-    }
-
-    public function setResolution(string $resolution): static
-    {
-        $this->resolution = $resolution;
-
-        return $this;
-    }
-
     public function getNetwork(): ?string
     {
         return $this->network;
@@ -259,18 +193,6 @@ class Phone
     public function setNetwork(string $network): static
     {
         $this->network = $network;
-
-        return $this;
-    }
-
-    public function getManufacturerReference(): ?string
-    {
-        return $this->manufacturer_reference;
-    }
-
-    public function setManufacturerReference(?string $manufacturer_reference): static
-    {
-        $this->manufacturer_reference = $manufacturer_reference;
 
         return $this;
     }
@@ -298,79 +220,7 @@ class Phone
 
         return $this;
     }
-
-    public function getSerie(): ?string
-    {
-        return $this->serie;
-    }
-
-    public function setSerie(string $serie): static
-    {
-        $this->serie = $serie;
-
-        return $this;
-    }
-
-    public function getCardSim(): ?string
-    {
-        return $this->card_sim;
-    }
-
-    public function setCardSim(string $card_sim): static
-    {
-        $this->card_sim = $card_sim;
-
-        return $this;
-    }
-
-    public function getWeight(): ?string
-    {
-        return $this->weight;
-    }
-
-    public function setWeight(string $weight): static
-    {
-        $this->weight = $weight;
-
-        return $this;
-    }
-
-    public function getHeight(): ?string
-    {
-        return $this->height;
-    }
-
-    public function setHeight(string $height): static
-    {
-        $this->height = $height;
-
-        return $this;
-    }
-
-    public function getWidth(): ?string
-    {
-        return $this->width;
-    }
-
-    public function setWidth(string $width): static
-    {
-        $this->width = $width;
-
-        return $this;
-    }
-
-    public function getDepth(): ?string
-    {
-        return $this->depth;
-    }
-
-    public function setDepth(string $depth): static
-    {
-        $this->depth = $depth;
-
-        return $this;
-    }
-
+    
     public function getGarantee(): ?string
     {
         return $this->garantee;
