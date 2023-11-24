@@ -4,10 +4,10 @@ Class User {
     
     - firstname : string
     - lastname : string
-    - slug : string
+    - civility: string
+    - phone: string
     - email : string
     - password : string
-    - token : string
 
 }
 

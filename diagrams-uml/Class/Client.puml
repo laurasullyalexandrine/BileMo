@@ -3,7 +3,8 @@
 Class Client {
     
     - name : string
-    - slug : string
+    - siret : string
+    - email : string
 
 }
 
