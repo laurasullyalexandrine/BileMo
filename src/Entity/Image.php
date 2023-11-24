@@ -25,6 +25,9 @@ class Image
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updated_at = null;
 
+    #[ORM\ManyToOne(inversedBy: 'images', cascade: ['persist'])]
+    private ?Phone $phone = null;
+
     public function __construct()
     {
         $this->created_at = new \DateTimeImmutable();
@@ -72,6 +75,18 @@ class Image
     public function setUpdatedAt(?\DateTimeImmutable $updated_at): static
     {
         $this->updated_at = $updated_at;
+
+        return $this;
+    }
+
+    public function getPhone(): ?Phone
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(?Phone $phone): static
+    {
+        $this->phone = $phone;
 
         return $this;
     }
