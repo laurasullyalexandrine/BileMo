@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\PhoneRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -95,9 +97,16 @@ class Phone
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updated_at = null;
 
+    #[ORM\OneToMany(mappedBy: 'phone', targetEntity: Image::class, cascade: ['persist'], orphanRemoval: true)]
+    private Collection $images;
+
+    #[ORM\ManyToOne(inversedBy: 'phones', cascade: ['persist'])]
+    private ?Brand $brand = null;
+
     public function __construct()
     {
         $this->created_at = new \DateTimeImmutable();
+        $this->images = new ArrayCollection();
     }
 
     public function __toString()
@@ -406,6 +415,48 @@ class Phone
     public function setUpdatedAt(?\DateTimeImmutable $updated_at): static
     {
         $this->updated_at = $updated_at;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Image>
+     */
+    public function getImages(): Collection
+    {
+        return $this->images;
+    }
+
+    public function addImage(Image $image): static
+    {
+        if (!$this->images->contains($image)) {
+            $this->images->add($image);
+            $image->setPhone($this);
+        }
+
+        return $this;
+    }
+
+    public function removeImage(Image $image): static
+    {
+        if ($this->images->removeElement($image)) {
+            // set the owning side to null (unless already changed)
+            if ($image->getPhone() === $this) {
+                $image->setPhone(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getBrand(): ?Brand
+    {
+        return $this->brand;
+    }
+
+    public function setBrand(?Brand $brand): static
+    {
+        $this->brand = $brand;
 
         return $this;
     }

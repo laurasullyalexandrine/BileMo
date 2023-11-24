@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\BrandRepository;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -31,9 +33,13 @@ class Brand
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updated_at = null;
 
+    #[ORM\OneToMany(mappedBy: 'brand', targetEntity: Phone::class, cascade: ['persist'], orphanRemoval: true)]
+    private Collection $phones;
+
     public function __construct()
     {
         $this->created_at = new \DateTimeImmutable();
+        $this->phones = new ArrayCollection();
     }
 
     public function __toString()
@@ -90,6 +96,36 @@ class Brand
     public function setUpdatedAt(?\DateTimeImmutable $updated_at): static
     {
         $this->updated_at = $updated_at;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Phone>
+     */
+    public function getPhones(): Collection
+    {
+        return $this->phones;
+    }
+
+    public function addPhone(Phone $phone): static
+    {
+        if (!$this->phones->contains($phone)) {
+            $this->phones->add($phone);
+            $phone->setBrand($this);
+        }
+
+        return $this;
+    }
+
+    public function removePhone(Phone $phone): static
+    {
+        if ($this->phones->removeElement($phone)) {
+            // set the owning side to null (unless already changed)
+            if ($phone->getBrand() === $this) {
+                $phone->setBrand(null);
+            }
+        }
 
         return $this;
     }
