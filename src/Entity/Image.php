@@ -28,6 +28,8 @@ class Image
     #[ORM\ManyToOne(inversedBy: 'images', cascade: ['persist'])]
     private ?Phone $phone = null;
 
+    private ?UploadedFile $uploadedFile = null;
+
     public function __construct()
     {
         $this->created_at = new \DateTimeImmutable();
@@ -89,5 +91,26 @@ class Image
         $this->phone = $phone;
 
         return $this;
+    }
+
+    /**
+     * Function to edit name of image upload
+     */
+    #[ORM\PrePersist]
+    public function setFileName(): void
+    {
+        $this->uploadedFile = new UploadedFile($this->name, 'test', null, null, true);
+        $this->name = uniqid() . '.' . $this->uploadedFile->guessExtension();
+    }
+
+    /**
+     * Function to save and to update the recorded file
+     *
+     * @return void
+     */
+    #[ORM\PostPersist, ORM\PostUpdate]
+    public function saveFile(): void
+    {
+        $this->uploadedFile->move(__DIR__ . '/../../public/' . self::BASE_PATH, $this->name);
     }
 }
