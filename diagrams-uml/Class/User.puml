@@ -1,13 +1,15 @@
 @startuml User
 
 Class User {
-    
+
     - firstname : string
     - lastname : string
     - civility: string
     - phone: string
     - email : string
     - password : string
+    - created_at : Datetime
+    - updated_at : Datetime
 
 }
 
