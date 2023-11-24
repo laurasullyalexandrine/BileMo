@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\PhoneRepository;
+use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -16,6 +17,14 @@ class Phone
 
     #[ORM\Column(length: 64)]
     private ?string $model = null;
+
+    /**
+     * @Gedmo\Slug(fields={"model"})
+     *
+     * @var string|null
+     */
+    #[ORM\Column(length: 128)]
+    private ?string $slug = null;
 
     #[ORM\Column(length: 10)]
     private ?string $color = null;
@@ -99,6 +108,18 @@ class Phone
     public function setModel(string $model): static
     {
         $this->model = $model;
+
+        return $this;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): static
+    {
+        $this->slug = $slug;
 
         return $this;
     }
