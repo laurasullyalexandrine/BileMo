@@ -4,6 +4,7 @@ Class Brand {
     
     - name : string
     - slug : string
+    - date : string
 
 }
 
