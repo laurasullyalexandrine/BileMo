@@ -24,17 +24,15 @@ Class Phone {
     - card_reader : bool
     - release_year: int
     - serie : string
-    - head_sar : float
-    - truck_sar : float
     - card_sim : string
-    - weight : int
+    - weight : string
     - height : int
     - width : int
     - depth : int
     - garantee : string
     - description : string
-    - date : Datetime
-    
+    - created_at : Datetime
+    - updated_at : Datetime
 }
 
 User *-"1" Client: create >
