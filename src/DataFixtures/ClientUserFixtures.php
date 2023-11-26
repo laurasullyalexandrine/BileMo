@@ -32,6 +32,10 @@ class ClientUserFixtures extends Fixture
 
         $manager->persist($client);
 
+        // for($u = 0; $U < 25; $++) {
+        //     $user = new User
+        // }
+
         $manager->flush();
     }
 }
