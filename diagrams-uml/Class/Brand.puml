@@ -1,10 +1,11 @@
 @startuml Brand
 
 Class Brand {
-    
+
     - name : string
     - slug : string
-    - date : string
+    - created_at : Datetime
+    - updated_at : Datetime
 
 }
 

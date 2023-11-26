@@ -1,9 +1,12 @@
 @startuml Client
 
 Class Client {
-    
+
     - name : string
-    - slug : string
+    - siret : string
+    - email : string
+    - created_at : Datetime
+    - updated_at : Datetime
 
 }
 
