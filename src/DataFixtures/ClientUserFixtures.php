@@ -3,6 +3,7 @@
 namespace App\DataFixtures;
 
 use Faker\Factory;
+use App\Entity\User;
 use App\Entity\Client;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -32,9 +33,44 @@ class ClientUserFixtures extends Fixture
 
         $manager->persist($client);
 
-        // for($u = 0; $U < 25; $++) {
-        //     $user = new User
-        // }
+        $option = ['cost' => User::HASH_COST];
+        for ($um = 0; $um < 15; $um++) {
+            $userMale = new User();
+            $userMale->setFirtname($faker->firstNameMale())
+                ->setLastname($faker->lastName())
+                ->setCivility("monsieur")
+                ->setPhone($faker->phoneNumber())
+                ->setEmail(strtolower($userMale->getFirtname() . '.' . $userMale->getLastname()) . '@' . $faker->freeEmailDomain())
+                ->setPassword(
+                    password_hash(
+                        'usermaledatafixtures',
+                        PASSWORD_BCRYPT,
+                        $option,
+                    )
+                )
+                ->setCreatedAt(new \DateTimeImmutable())
+                ->setClient($client);
+            $manager->persist($userMale);
+        }
+
+        for ($uf = 0; $uf < 15; $uf++) {
+            $userFemale = new User();
+            $userFemale->setFirtname($faker->firstNameFemale())
+                ->setLastname($faker->lastName())
+                ->setCivility("madame")
+                ->setPhone($faker->phoneNumber())
+                ->setEmail(strtolower($userFemale->getFirtname() . '.' . $userFemale->getLastname()) . '@' . $faker->freeEmailDomain())
+                ->setPassword(
+                    password_hash(
+                        'userfemaledatafixtures',
+                        PASSWORD_BCRYPT,
+                        $option,
+                    )
+                )
+                ->setCreatedAt(new \DateTimeImmutable())
+                ->setClient($client);
+            $manager->persist($userFemale);
+        }
 
         $manager->flush();
     }
