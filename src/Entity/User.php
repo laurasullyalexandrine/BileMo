@@ -10,6 +10,8 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 #[UniqueEntity(fields: ['email'], message: "Cet email existe déjà. Merci de le modifier.")]
 class User
 {
+    const HASH_COST = 12;
+    
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
