@@ -7,10 +7,12 @@ use App\Entity\Phone;
 use App\Repository\BrandRepository;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class PhoneFixtures extends Fixture
 {
     public function __construct(
+        private SluggerInterface $slugger,
         private BrandRepository $brandRepository
     ) {
     }
@@ -346,10 +348,11 @@ class PhoneFixtures extends Fixture
             ],
         ];
 
+        // Phones
         foreach ($phoneDatas as $phoneData) {
             $phone = new Phone();
             $phone->setModel($phoneData["model"])
-                ->setSlug($phone->getModel())
+                ->setSlug(strtolower($this->slugger->slug($phone->getModel())))
                 ->setColor($phoneData["color"])
                 ->setOperatorLock($phoneData["operator_lock"])
                 ->setScreenSize($phoneData["screen_size"])

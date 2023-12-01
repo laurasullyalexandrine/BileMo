@@ -2,13 +2,16 @@
 
 namespace App\DataFixtures;
 
-use Faker\Factory;
 use App\Entity\Brand;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class BrandFixtures extends Fixture
 {
+    public function __construct(private SluggerInterface $slugger)
+    {
+    }
     public function load(ObjectManager $manager): void
     {
         $brandDatas = [
@@ -23,7 +26,7 @@ class BrandFixtures extends Fixture
         foreach ($brandDatas as $brandData) {
             $brand = new Brand();
             $brand->setName($brandData)
-                ->setSlug($brand->getName())
+                ->setSlug($this->slugger->slug($brand->getName()))
                 ->setCreatedAt(new \DateTimeImmutable());
 
             $manager->persist($brand);
