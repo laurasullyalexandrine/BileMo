@@ -23,31 +23,12 @@ class UserController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $manager,
+        private UserRepository $userRepository,
         private ValidatorInterface $validator,
         private UrlGeneratorInterface $urlGenerator
     ) {
     }
 
-    #[Route('/users', name: 'users', methods: ['GET'])]
-    public function getAllUsers(UserRepository $userRepository): JsonResponse
-    {
-        $users = $userRepository->findAll();
-        return $this->json($users, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'client',
-            ]
-        ]);
-    }
-
-    #[Route('/user/{id}', name: 'user', methods: ['GET'])]
-    public function getOneUser(User $user): JsonResponse
-    {
-        return $this->json($user, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'client',
-            ]
-        ]);
-    }
 
     #[Route('/create-user/{slug}', name: 'create_user', methods: ['POST'])]
     public function createUser(
@@ -93,8 +74,75 @@ class UserController extends AbstractController
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
+    #[Route('/users/{slug}', name: 'users', methods: ['GET'])]
+    public function getAllUsers(Client $client): JsonResponse
+    {
+        $users = $this->userRepository->findUsersByClient($client);
+ 
+        return $this->json($users, 200, [], [
+            AbstractNormalizer::IGNORED_ATTRIBUTES => [
+                'client',
+            ]
+        ]);
+    }
 
-    #[Route('/delete-user/{id}', name: 'delete_user', methods: ['DELETE'])]
+    #[Route('/user/{slug}/{id}', name: 'user', methods: ['GET'])]
+    public function getOneUser(User $user): JsonResponse
+    {
+        return $this->json($user, 200, [], [
+            AbstractNormalizer::IGNORED_ATTRIBUTES => [
+                'client',
+            ]
+        ]);
+    }
+
+
+    #[Route('/update-user/{slug}/{id}', name: 'update_user', methods: ['PUT'])]
+    public function updateUser(
+        Request $request,
+        SerializerInterface $serializer,
+        Client $client
+    ): JsonResponse {
+        $option = ['cost' => User::HASH_COST];
+        $user = $serializer->deserialize($request->getContent(), User::class, 'json');
+        $user->setClient($client)
+            ->setPassword(
+                password_hash(
+                    'usermaledatafixtures',
+                    PASSWORD_BCRYPT,
+                    $option,
+                )
+            );
+
+        // Vérifier si il y a une erreur lors de la validation du formulaire
+        $errors = $this->validator->validate($user);
+        if ($errors->count() > 0) {
+            return new JsonResponse(
+                $serializer->serialize($errors, 'json'),
+                JsonResponse::HTTP_BAD_REQUEST,
+                [],
+                true
+            );
+        }
+        // Si pas d'erreur enregistrer le nouvel utilisateur en BDD
+        $this->manager->persist($user);
+        $this->manager->flush();
+
+        // Contourner l'erreur circulaire
+        $jsonUser = $this->json($user, 200, [], [
+            AbstractNormalizer::IGNORED_ATTRIBUTES => [
+                'client',
+            ]
+        ]);
+
+        // Ajouter l'url de vérification 
+        $location = $this->urlGenerator->generate('api_v1_user', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
+    }
+
+
+    #[Route('/delete-user/{slug}/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(User $user): JsonResponse
     {
         $this->manager->remove($user);
