@@ -40,7 +40,7 @@ class User
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message:"Le mot de passe de l'utilisateur est obligatoire. Il devra être changé à sa première connexion.")]
-    #[Assert\Length(min: 8, max: 16, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères", maxMessage: "Le mot de passe doit faire plus {{ limit }} caractères")]
+    #[Assert\Length(min: 8, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères")]
     private ?string $password = null;
 
     #[ORM\Column]
@@ -49,7 +49,7 @@ class User
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updated_at = null;
 
-    #[ORM\ManyToOne(inversedBy: 'users')]
+    #[ORM\ManyToOne(inversedBy: 'users', cascade: ['persist'])]
     private ?Client $client = null;
 
     public function __construct()
