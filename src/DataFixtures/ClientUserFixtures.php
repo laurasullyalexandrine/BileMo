@@ -7,11 +7,15 @@ use App\Entity\User;
 use App\Entity\Client;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class ClientUserFixtures extends Fixture
 {
-    public function __construct(private UserPasswordHasherInterface $hasher)
+    public function __construct(
+        private UserPasswordHasherInterface $hasher,
+        private SluggerInterface $slugger
+    )
     {
     }
 
@@ -21,6 +25,7 @@ class ClientUserFixtures extends Fixture
 
         $client = new Client();
         $client->setName("High End Smart")
+            ->setSlug(strtolower($this->slugger->slug($client->getName())))
             ->setEmail("gracekelly@high-end-smart.com")
             ->setRoles(["ROLE_ADMIN"])
             ->setSiret("XXX XXX XXX XXXXX")
@@ -33,18 +38,18 @@ class ClientUserFixtures extends Fixture
             );
 
         $manager->persist($client);
-        
+
         // Créer un numéro de portable aléatoire
         $randomPhoneNumbers = str_pad(rand(0, 99999999), 8, '0', STR_PAD_LEFT);
         $phoneNumber = "06" . $randomPhoneNumbers;
         $option = ['cost' => User::HASH_COST];
         for ($um = 0; $um < 15; $um++) {
             $userMale = new User();
-            $userMale->setFirtname($faker->firstNameMale())
+            $userMale->setFirstname($faker->firstNameMale())
                 ->setLastname($faker->lastName())
                 ->setCivility("monsieur")
                 ->setPhone($phoneNumber)
-                ->setEmail(strtolower($userMale->getFirtname() . '.' . $userMale->getLastname()) . '@' . $faker->freeEmailDomain())
+                ->setEmail(strtolower($userMale->getFirstname() . '.' . $userMale->getLastname()) . '@' . $faker->freeEmailDomain())
                 ->setPassword(
                     password_hash(
                         'usermaledatafixtures',
@@ -59,11 +64,11 @@ class ClientUserFixtures extends Fixture
 
         for ($uf = 0; $uf < 15; $uf++) {
             $userFemale = new User();
-            $userFemale->setFirtname($faker->firstNameFemale())
+            $userFemale->setFirstname($faker->firstNameFemale())
                 ->setLastname($faker->lastName())
                 ->setCivility("madame")
                 ->setPhone($phoneNumber)
-                ->setEmail(strtolower($userFemale->getFirtname() . '.' . $userFemale->getLastname()) . '@' . $faker->freeEmailDomain())
+                ->setEmail(strtolower($userFemale->getFirstname() . '.' . $userFemale->getLastname()) . '@' . $faker->freeEmailDomain())
                 ->setPassword(
                     password_hash(
                         'userfemaledatafixtures',
