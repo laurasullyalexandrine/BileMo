@@ -5,6 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\UserRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[UniqueEntity(fields: ['email'], message: "Cet email existe déjà. Merci de le modifier.")]
@@ -18,21 +19,28 @@ class User
     private ?int $id = null;
 
     #[ORM\Column(length: 34)]
+    #[Assert\NotBlank(message:"Le prénom de l'utilisateur est obligatoire")]
     private ?string $firtname = null;
 
     #[ORM\Column(length: 84)]
+    #[Assert\NotBlank(message:"Le nom de l'utilisateur est obligatoire")]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 20)]
+    #[Assert\NotBlank(message:"Vous devez choisir la civilité de l'utilisateur")]
     private ?string $civility = null;
 
     #[ORM\Column(length: 10)]
+    #[Assert\NotBlank(message:"Le téléphone de l'utilisateur est obligatoire")]
     private ?string $phone = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Assert\NotBlank(message:"L'email' de l'utilisateur est obligatoire")]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message:"Le mot de passe de l'utilisateur est obligatoire. Il devra être changé à sa première connexion.")]
+    #[Assert\Length(min: 8, max: 16, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères", MaxMessage: "Le mot de passe doit faire plus {{ limit }} caractères")]
     private ?string $password = null;
 
     #[ORM\Column]
