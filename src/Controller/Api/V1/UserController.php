@@ -2,7 +2,9 @@
 
 namespace App\Controller\Api\V1;
 
+use App\Entity\User;
 use App\Entity\Client;
+use App\Repository\UserRepository;
 use App\Repository\ClientRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,12 +22,23 @@ class UserController extends AbstractController
     }
 
     #[Route('/api-v1/users', name: 'api_v1_users', methods: ['GET'])]
-    public function getAllUsers(): JsonResponse
+    public function getAllUsers(UserRepository $userRepository): JsonResponse
     {
+        $users = $userRepository->findAll();
+        return $this->json($users, 200, [], [
+            AbstractNormalizer::IGNORED_ATTRIBUTES => [
+                'client',
+            ]
+        ]);
+    }
 
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/Api/V1/UserController.php',
+    #[Route('/api-v1/user/{id}', name: 'api_v1_user_id', methods: ['GET'])]
+    public function getOneUser(User $user): JsonResponse
+    {
+        return $this->json($user, 200, [], [
+            AbstractNormalizer::IGNORED_ATTRIBUTES => [
+                'client',
+            ]
         ]);
     }
 
