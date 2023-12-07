@@ -20,7 +20,7 @@ class User
 
     #[ORM\Column(length: 34)]
     #[Assert\NotBlank(message:"Le prénom de l'utilisateur est obligatoire")]
-    private ?string $firtname = null;
+    private ?string $firstname = null;
 
     #[ORM\Column(length: 84)]
     #[Assert\NotBlank(message:"Le nom de l'utilisateur est obligatoire")]
@@ -40,7 +40,7 @@ class User
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message:"Le mot de passe de l'utilisateur est obligatoire. Il devra être changé à sa première connexion.")]
-    #[Assert\Length(min: 8, max: 16, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères", MaxMessage: "Le mot de passe doit faire plus {{ limit }} caractères")]
+    #[Assert\Length(min: 8, max: 16, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères", maxMessage: "Le mot de passe doit faire plus {{ limit }} caractères")]
     private ?string $password = null;
 
     #[ORM\Column]
@@ -52,19 +52,29 @@ class User
     #[ORM\ManyToOne(inversedBy: 'users')]
     private ?Client $client = null;
 
+    public function __construct()
+    {
+        $this->created_at = new \DateTimeImmutable();
+    }
+
+    public function __toString()
+    {
+        return $this->firstname;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getFirtname(): ?string
+    public function getFirstname(): ?string
     {
-        return $this->firtname;
+        return $this->firstname;
     }
 
-    public function setFirtname(string $firtname): static
+    public function setFirstname(string $firstname): static
     {
-        $this->firtname = $firtname;
+        $this->firstname = $firstname;
 
         return $this;
     }

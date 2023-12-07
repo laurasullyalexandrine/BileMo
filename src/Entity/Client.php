@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\ClientRepository;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -34,6 +35,14 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180)]
     private ?string $name = null;
 
+    /**
+     * @Gedmo\Slug(fields={"name"})
+     *
+     * @var string|null
+     */
+    #[ORM\Column(length: 255)]
+    private ?string $slug = null;
+
     #[ORM\Column(length: 255)]
     private ?string $siret = null;
 
@@ -48,7 +57,13 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __construct()
     {
+        $this->created_at = new \DateTimeImmutable();
         $this->users = new ArrayCollection();
+    }
+
+    public function __toString()
+    {
+        return $this->name;
     }
 
     public function getId(): ?int
@@ -83,7 +98,8 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
      *
      * @return string
      */
-    public function getUsername(): string {
+    public function getUsername(): string
+    {
         return $this->getUserIdentifier();
     }
 
@@ -137,6 +153,19 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     public function setName(string $name): static
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): static
+    {
+        $this->slug = $slug;
 
         return $this;
     }
