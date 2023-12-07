@@ -22,6 +22,7 @@ class ClientUserFixtures extends Fixture
         $client = new Client();
         $client->setName("High End Smart")
             ->setEmail("gracekelly@high-end-smart.com")
+            ->setRoles(["ROLE_ADMIN"])
             ->setSiret("XXX XXX XXX XXXXX")
             ->setCreatedAt(new \DateTimeImmutable())
             ->setPassword(
@@ -32,14 +33,17 @@ class ClientUserFixtures extends Fixture
             );
 
         $manager->persist($client);
-
+        
+        // Créer un numéro de portable aléatoire
+        $randomPhoneNumbers = str_pad(rand(0, 99999999), 8, '0', STR_PAD_LEFT);
+        $phoneNumber = "06" . $randomPhoneNumbers;
         $option = ['cost' => User::HASH_COST];
         for ($um = 0; $um < 15; $um++) {
             $userMale = new User();
             $userMale->setFirtname($faker->firstNameMale())
                 ->setLastname($faker->lastName())
                 ->setCivility("monsieur")
-                ->setPhone($faker->phoneNumber())
+                ->setPhone($phoneNumber)
                 ->setEmail(strtolower($userMale->getFirtname() . '.' . $userMale->getLastname()) . '@' . $faker->freeEmailDomain())
                 ->setPassword(
                     password_hash(
@@ -58,7 +62,7 @@ class ClientUserFixtures extends Fixture
             $userFemale->setFirtname($faker->firstNameFemale())
                 ->setLastname($faker->lastName())
                 ->setCivility("madame")
-                ->setPhone($faker->phoneNumber())
+                ->setPhone($phoneNumber)
                 ->setEmail(strtolower($userFemale->getFirtname() . '.' . $userFemale->getLastname()) . '@' . $faker->freeEmailDomain())
                 ->setPassword(
                     password_hash(

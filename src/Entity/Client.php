@@ -79,6 +79,15 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
+     * Allows you to return the field used for authentication
+     *
+     * @return string
+     */
+    public function getUsername(): string {
+        return $this->getUserIdentifier();
+    }
+
+    /**
      * @see UserInterface
      */
     public function getRoles(): array
