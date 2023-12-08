@@ -52,7 +52,7 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $updated_at = null;
 
-    #[ORM\OneToMany(mappedBy: 'client', targetEntity: User::class)]
+    #[ORM\OneToMany(mappedBy: 'client', targetEntity: User::class, cascade: ['remove'], orphanRemoval: true)]
     private Collection $users;
 
     public function __construct()

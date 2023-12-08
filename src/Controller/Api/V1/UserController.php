@@ -16,6 +16,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[Route('/api-v1', name: 'api_v1_', methods: ['GET'])]
@@ -23,31 +24,13 @@ class UserController extends AbstractController
 {
     public function __construct(
         private EntityManagerInterface $manager,
+        private UserRepository $userRepository,
+        private ClientRepository $clientRepository,
         private ValidatorInterface $validator,
         private UrlGeneratorInterface $urlGenerator
     ) {
     }
 
-    #[Route('/users', name: 'users', methods: ['GET'])]
-    public function getAllUsers(UserRepository $userRepository): JsonResponse
-    {
-        $users = $userRepository->findAll();
-        return $this->json($users, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'client',
-            ]
-        ]);
-    }
-
-    #[Route('/user/{id}', name: 'user', methods: ['GET'])]
-    public function getOneUser(User $user): JsonResponse
-    {
-        return $this->json($user, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'client',
-            ]
-        ]);
-    }
 
     #[Route('/create-user/{slug}', name: 'create_user', methods: ['POST'])]
     public function createUser(
@@ -93,8 +76,61 @@ class UserController extends AbstractController
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
+    #[Route('/users/{slug}', name: 'users', methods: ['GET'])]
+    public function getAllUsers(Client $client): JsonResponse
+    {
+        $users = $this->userRepository->findUsersByClient($client);
 
-    #[Route('/delete-user/{id}', name: 'delete_user', methods: ['DELETE'])]
+        return $this->json($users, 200, [], [
+            AbstractNormalizer::IGNORED_ATTRIBUTES => [
+                'client',
+            ]
+        ]);
+    }
+
+    #[Route('/user/{slug}/{id}', name: 'user', methods: ['GET'])]
+    public function getOneUser(User $user): JsonResponse
+    {
+        return $this->json($user, 200, [], [
+            AbstractNormalizer::IGNORED_ATTRIBUTES => [
+                'client',
+            ]
+        ]);
+    }
+
+
+    #[Route('/update-user/{slug}/{id}', name: 'update_user', methods: ['PUT'])]
+    public function updateUser(
+        Request $request,
+        SerializerInterface $serializer,
+        User $user
+    ): JsonResponse {
+
+        $updateUser = $serializer->deserialize(
+            $request->getContent(),
+            User::class,
+            'json',
+            [AbstractNormalizer::OBJECT_TO_POPULATE => $user]
+        );
+
+        $content = $request->toArray();
+
+        $clientSlug = $content["client_slug"] ?? null;
+        $client = $this->clientRepository->findOneBySlug($clientSlug);
+
+        if (!$client) {
+            throw new HttpException(402, 'Client non trouvé. Merci de vérifier vos données.');
+        }
+        
+        $updateUser->setClient($client);
+
+        $this->manager->persist($updateUser);
+        $this->manager->flush();
+        return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
+    }
+    
+
+    #[Route('/delete-user/{slug}/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(User $user): JsonResponse
     {
         $this->manager->remove($user);

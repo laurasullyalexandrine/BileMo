@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Client;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -19,5 +20,17 @@ class UserRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, User::class);
+    }
+
+    public function findUsersByClient(Client $client)
+    {
+        return $this->createQueryBuilder('u')
+            ->addSelect('c')
+            ->leftJoin('u.client', 'c')
+            ->andWhere('c.slug = :slug')
+            ->setParameter('slug', $client->getSlug())
+            ->orderBy('u.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }
