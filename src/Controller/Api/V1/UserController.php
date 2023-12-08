@@ -7,11 +7,12 @@ use App\Entity\Client;
 use App\Repository\UserRepository;
 use App\Repository\ClientRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Knp\Component\Pager\PaginatorInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -27,7 +28,8 @@ class UserController extends AbstractController
         private UserRepository $userRepository,
         private ClientRepository $clientRepository,
         private ValidatorInterface $validator,
-        private UrlGeneratorInterface $urlGenerator
+        private UrlGeneratorInterface $urlGenerator,
+        private TagAwareCacheInterface $cache
     ) {
     }
 
@@ -79,12 +81,20 @@ class UserController extends AbstractController
     }
 
     #[Route('/users/{slug}', name: 'users', methods: ['GET'])]
-    public function getAllUsers(
+    public function getUsers(
         Client $client,
-        Request $request
+        Request $request,
+        UserRepository $userRepository
     ): JsonResponse {
         $page = $request->query->getInt('page', 1);
         $users = $this->userRepository->findUsersByClient($client, $page);
+
+        $idCache =  "getUsers-" . $page;
+        $users = $this->cache->get($idCache, function(ItemInterface $item) use ($userRepository, $client, $page) {
+            echo ("PAS ENCORE EN CACHE");
+            $item->tag("usersCache");
+            return $userRepository->findUsersByClient($client, $page);
+        }); 
 
         return $this->json($users, 200, [], [
             AbstractNormalizer::IGNORED_ATTRIBUTES => [
@@ -111,6 +121,7 @@ class UserController extends AbstractController
         User $user
     ): JsonResponse {
 
+        $this->cache->invalidateTags(["usersCache"]);
         $updateUser = $serializer->deserialize(
             $request->getContent(),
             User::class,
@@ -138,6 +149,7 @@ class UserController extends AbstractController
     #[Route('/delete-user/{slug}/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(User $user): JsonResponse
     {
+        $this->cache->invalidateTags(["usersCache"]);
         $this->manager->remove($user);
         $this->manager->flush();
 
