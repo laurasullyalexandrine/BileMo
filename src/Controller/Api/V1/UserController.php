@@ -71,7 +71,7 @@ class UserController extends AbstractController
         ]);
 
         // Ajouter l'url de vérification 
-        $location = $this->urlGenerator->generate('api_v1_user', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $this->urlGenerator->generate('api_v1_user', ['slug' => $client->getSlug(),'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }
