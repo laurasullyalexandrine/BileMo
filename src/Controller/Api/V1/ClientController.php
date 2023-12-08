@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
@@ -24,25 +25,29 @@ class ClientController extends AbstractController
         private UserPasswordHasherInterface $hasher,
         private ValidatorInterface $validator,
         private UrlGeneratorInterface $urlGenerator,
-        private ClientRepository $clientRepository
+        private ClientRepository $clientRepository,
+        private SluggerInterface $slugger
     ) {
     }
 
-    
-    #[Route('/create-client/{slug}', name: 'create_client', methods: ['POST'])]
+
+    #[Route('/create-client', name: 'create_client', methods: ['POST'])]
     public function create(
         Request $request,
         SerializerInterface $serializer
     ): JsonResponse {
         $client = $serializer->deserialize($request->getContent(), Client::class, 'json');
         $content = $request->toArray();
+
         $password = $content["password"];
-        $client->setPassword(
-            $this->hasher->hashPassword(
-                $client,
-                $password,
+        $name = $content["name"];
+        $client->setSlug(strtolower($this->slugger->slug($name)))
+            ->setPassword(
+                $this->hasher->hashPassword(
+                    $client,
+                    $password,
+                )
             )
-        )
             ->setRoles(['ROLE_ADMIN']);
 
         // Vérifier si il y a une erreur lors de la validation du formulaire
@@ -67,7 +72,7 @@ class ClientController extends AbstractController
         ]);
 
         // Ajouter l'url de vérification 
-        $location = $this->urlGenerator->generate('api_v1_client', ['id' => $client->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $this->urlGenerator->generate('api_v1_client', ['slug' => $client->getSlug()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse($jsonClient, Response::HTTP_CREATED, ["Location" => $location], true);
     }
@@ -85,7 +90,7 @@ class ClientController extends AbstractController
     }
 
     #[Route('/client/{slug}', name: 'client', methods: ['GET'])]
-    public function getOneUser(Client $client): JsonResponse
+    public function getClient(Client $client): JsonResponse
     {
         return $this->json($client, 200, [], [
             AbstractNormalizer::IGNORED_ATTRIBUTES => [

@@ -10,6 +10,7 @@ use App\Repository\ClientRepository;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 #[UniqueEntity(fields: ['email'], message: "Cet email existe déjà. Merci de le modifier.")]
@@ -21,6 +22,7 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Assert\NotBlank(message:"Votre email est obligatoire")]
     private ?string $email = null;
 
     #[ORM\Column]
@@ -30,6 +32,8 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
+    #[Assert\NotBlank(message:"Votre mot de passe est obligatoire.")]
+    #[Assert\Length(min: 8, minMessage: "Votre mot de passe doit faire au moins {{ limit }} caractères")]
     private ?string $password = null;
 
     #[ORM\Column(length: 180)]
@@ -44,9 +48,12 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $slug = null;
 
     #[ORM\Column(length: 15)]
+    #[Assert\NotBlank(message:"Votre téléphone est obligatoire")]
     private ?string $phone = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message:"Votre numéro de SIRET est obligatoire.")]
+    #[Assert\Length(min: 17, minMessage: "Votre numéro de SIRET n'est pas correct. Merci de vérifier.")]
     private ?string $siret = null;
 
     #[ORM\Column]
