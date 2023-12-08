@@ -16,6 +16,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[Route('/api-v1', name: 'api_v1_', methods: ['GET'])]
@@ -24,6 +25,7 @@ class UserController extends AbstractController
     public function __construct(
         private EntityManagerInterface $manager,
         private UserRepository $userRepository,
+        private ClientRepository $clientRepository,
         private ValidatorInterface $validator,
         private UrlGeneratorInterface $urlGenerator
     ) {
@@ -78,7 +80,7 @@ class UserController extends AbstractController
     public function getAllUsers(Client $client): JsonResponse
     {
         $users = $this->userRepository->findUsersByClient($client);
- 
+
         return $this->json($users, 200, [], [
             AbstractNormalizer::IGNORED_ATTRIBUTES => [
                 'client',
@@ -101,46 +103,32 @@ class UserController extends AbstractController
     public function updateUser(
         Request $request,
         SerializerInterface $serializer,
-        Client $client
+        User $user
     ): JsonResponse {
-        $option = ['cost' => User::HASH_COST];
-        $user = $serializer->deserialize($request->getContent(), User::class, 'json');
-        $user->setClient($client)
-            ->setPassword(
-                password_hash(
-                    'usermaledatafixtures',
-                    PASSWORD_BCRYPT,
-                    $option,
-                )
-            );
 
-        // Vérifier si il y a une erreur lors de la validation du formulaire
-        $errors = $this->validator->validate($user);
-        if ($errors->count() > 0) {
-            return new JsonResponse(
-                $serializer->serialize($errors, 'json'),
-                JsonResponse::HTTP_BAD_REQUEST,
-                [],
-                true
-            );
+        $updateUser = $serializer->deserialize(
+            $request->getContent(),
+            User::class,
+            'json',
+            [AbstractNormalizer::OBJECT_TO_POPULATE => $user]
+        );
+
+        $content = $request->toArray();
+
+        $clientSlug = $content["client_slug"] ?? null;
+        $client = $this->clientRepository->findOneBySlug($clientSlug);
+
+        if (!$client) {
+            throw new HttpException(402, 'Client non trouvé. Merci de vérifier vos données.');
         }
-        // Si pas d'erreur enregistrer le nouvel utilisateur en BDD
-        $this->manager->persist($user);
+        
+        $updateUser->setClient($client);
+
+        $this->manager->persist($updateUser);
         $this->manager->flush();
-
-        // Contourner l'erreur circulaire
-        $jsonUser = $this->json($user, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'client',
-            ]
-        ]);
-
-        // Ajouter l'url de vérification 
-        $location = $this->urlGenerator->generate('api_v1_user', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
-
-        return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
+        return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
-
+    
 
     #[Route('/delete-user/{slug}/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(User $user): JsonResponse
