@@ -2,10 +2,11 @@
 
 namespace App\Repository;
 
-use App\Entity\Client;
 use App\Entity\User;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Entity\Client;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @extends ServiceEntityRepository<User>
@@ -22,15 +23,32 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-    public function findUsersByClient(Client $client): array
+    public function findUsersByClient(Client $client, int $page, int $maxResult = 10): array
     {
-        return $this->createQueryBuilder('u')
+        $result = [];
+        $query = $this->createQueryBuilder('u')
             ->addSelect('c')
             ->leftJoin('u.client', 'c')
             ->andWhere('c.slug = :slug')
             ->setParameter('slug', $client->getSlug())
             ->orderBy('u.created_at', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->setMaxResults($maxResult)
+            ->setFirstResult(($page * $maxResult) - $maxResult);
+            
+            $query->getQuery()
+                ->getResult();
+
+        $paginator = new Paginator($query);
+        $data = $paginator->getQuery()->getResult();
+
+        // Calculate the number of pages
+        $pages =  ceil($paginator->count() / $maxResult);
+
+        // Check that there is data
+        if (empty($data)) {
+            return $result;
+        } 
+
+        return $data;
     }
 }

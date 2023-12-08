@@ -7,6 +7,7 @@ use App\Entity\Client;
 use App\Repository\UserRepository;
 use App\Repository\ClientRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -78,9 +79,18 @@ class UserController extends AbstractController
     }
 
     #[Route('/users/{slug}', name: 'users', methods: ['GET'])]
-    public function getAllUsers(Client $client): JsonResponse
+    public function getAllUsers(
+        Client $client,
+        PaginatorInterface $paginator,
+        Request $request): JsonResponse
     {
-        $users = $this->userRepository->findUsersByClient($client);
+        $page = $request->query->getInt('page', 1);
+        $users = $this->userRepository->findUsersByClient($client, $page);
+        // $users = $paginator->paginate(
+        //     $usersDatabase,
+        //     $request->query->getInt('page', 1),
+        //     10
+        // );
 
         return $this->json($users, 200, [], [
             AbstractNormalizer::IGNORED_ATTRIBUTES => [

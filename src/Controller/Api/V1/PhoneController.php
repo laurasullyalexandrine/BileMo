@@ -4,18 +4,27 @@ namespace App\Controller\Api\V1;
 
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 
 class PhoneController extends AbstractController
 {
     #[Route('/api-v1/phones', name: 'api_v1_phones', methods: ['GET'])]
-    public function getAllPhones(PhoneRepository $phoneRepository): JsonResponse
+    public function getAllPhones(
+        PaginatorInterface $paginator, 
+        PhoneRepository $phoneRepository,
+        Request $request): JsonResponse
     {
-        $phones = $phoneRepository->findAll();
-
+        $phonesDatabase = $phoneRepository->findAll();
+        $phones = $paginator->paginate(
+            $phonesDatabase,
+            $request->query->getInt('page', 1),
+            10
+        );
         // Ignore attributes of related entities
         return $this->json($phones, 200, [], [
             AbstractNormalizer::IGNORED_ATTRIBUTES => [

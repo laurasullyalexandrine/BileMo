@@ -77,18 +77,6 @@ class ClientController extends AbstractController
         return new JsonResponse($jsonClient, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
-    #[Route('/clients', name: 'clients', methods: ['GET'])]
-    public function getAllUsers(): JsonResponse
-    {
-        $clients = $this->clientRepository->findAll();
-
-        return $this->json($clients, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'users',
-            ]
-        ]);
-    }
-
     #[Route('/client/{slug}', name: 'client', methods: ['GET'])]
     public function getClient(Client $client): JsonResponse
     {
