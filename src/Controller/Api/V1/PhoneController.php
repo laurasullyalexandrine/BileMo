@@ -15,16 +15,13 @@ class PhoneController extends AbstractController
 {
     #[Route('/api-v1/phones', name: 'api_v1_phones', methods: ['GET'])]
     public function getAllPhones(
-        PaginatorInterface $paginator, 
         PhoneRepository $phoneRepository,
-        Request $request): JsonResponse
-    {
-        $phonesDatabase = $phoneRepository->findAll();
-        $phones = $paginator->paginate(
-            $phonesDatabase,
-            $request->query->getInt('page', 1),
-            10
-        );
+        Request $request
+    ): JsonResponse {
+        $page = $request->query->getInt('page', 1);
+        $phones = $phoneRepository->findAllWithPagination($page);
+
+
         // Ignore attributes of related entities
         return $this->json($phones, 200, [], [
             AbstractNormalizer::IGNORED_ATTRIBUTES => [

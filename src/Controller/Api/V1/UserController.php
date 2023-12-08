@@ -81,16 +81,10 @@ class UserController extends AbstractController
     #[Route('/users/{slug}', name: 'users', methods: ['GET'])]
     public function getAllUsers(
         Client $client,
-        PaginatorInterface $paginator,
-        Request $request): JsonResponse
-    {
+        Request $request
+    ): JsonResponse {
         $page = $request->query->getInt('page', 1);
         $users = $this->userRepository->findUsersByClient($client, $page);
-        // $users = $paginator->paginate(
-        //     $usersDatabase,
-        //     $request->query->getInt('page', 1),
-        //     10
-        // );
 
         return $this->json($users, 200, [], [
             AbstractNormalizer::IGNORED_ATTRIBUTES => [
