@@ -22,7 +22,7 @@ class UserRepository extends ServiceEntityRepository
         parent::__construct($registry, User::class);
     }
 
-    public function findUsersByClient(Client $client)
+    public function findUsersByClient(Client $client): array
     {
         return $this->createQueryBuilder('u')
             ->addSelect('c')
