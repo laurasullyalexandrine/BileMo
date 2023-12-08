@@ -6,7 +6,21 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Repository\UserRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
+use JMS\Serializer\Annotation as Serializer;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+/**
+ * @Serializer\XmlRoot("user")
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *         "api_v1_user",
+ *          parameters = {"slug" = "expr(object.getSlug())", "id" = "expr(object.getId())"}
+ *      ),
+ *
+ *      )
+ * 
+ */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[UniqueEntity(fields: ['email'], message: "Cet email existe déjà. Merci de le modifier.")]
 class User

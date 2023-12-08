@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
-use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\Serializer;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -37,7 +37,7 @@ class UserController extends AbstractController
     #[Route('/create-user/{slug}', name: 'create_user', methods: ['POST'])]
     public function createUser(
         Request $request,
-        SerializerInterface $serializer,
+        Serializer $serializer,
         Client $client
     ): JsonResponse {
         $option = ['cost' => User::HASH_COST];
@@ -117,20 +117,36 @@ class UserController extends AbstractController
     #[Route('/update-user/{slug}/{id}', name: 'update_user', methods: ['PUT'])]
     public function updateUser(
         Request $request,
-        SerializerInterface $serializer,
+        Serializer $serializer,
         User $user
     ): JsonResponse {
 
-        $this->cache->invalidateTags(["usersCache"]);
-        $updateUser = $serializer->deserialize(
-            $request->getContent(),
-            User::class,
-            'json',
-            [AbstractNormalizer::OBJECT_TO_POPULATE => $user]
-        );
+        // Récupérer les données reçues de la requête
+        $newUser = $serializer->deserialize($request->getContent(), User::class, 'json');
+        
+        $option = ['cost' => User::HASH_COST];
+        // Editer le user
+        $user->setFirstname($newUser->getFirstname())
+            ->setLastname($newUser->getLastname())
+            ->setCivility($newUser->getCivility())
+            ->setPhone($newUser->getPhone())
+            ->setEmail($newUser->getEmail())
+            ->setPassword(
+                password_hash(
+                    $newUser->getPassword(),
+                    PASSWORD_BCRYPT,
+                    $option,
+                )
+                );
+
+        $errors = $this->validator->validate($user);
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
 
         $content = $request->toArray();
 
+        // Récupérer le client 
         $clientSlug = $content["client_slug"] ?? null;
         $client = $this->clientRepository->findOneBySlug($clientSlug);
 
@@ -138,10 +154,13 @@ class UserController extends AbstractController
             throw new HttpException(402, 'Client non trouvé. Merci de vérifier vos données.');
         }
 
-        $updateUser->setClient($client);
+        $user->setClient($client);
 
-        $this->manager->persist($updateUser);
+        $this->manager->persist($user);
         $this->manager->flush();
+
+        // Vider la cache
+        $this->cache->invalidateTags(["usersCache"]);
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 
