@@ -3,6 +3,7 @@
 Class Client {
 
     - name : string
+    - phone : string
     - siret : string
     - email : string
     - created_at : Datetime

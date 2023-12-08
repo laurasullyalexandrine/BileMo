@@ -43,6 +43,9 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $slug = null;
 
+    #[ORM\Column(length: 15)]
+    private ?string $phone = null;
+
     #[ORM\Column(length: 255)]
     private ?string $siret = null;
 
@@ -161,6 +164,18 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     public function setSlug(string $slug): static
     {
         $this->slug = $slug;
+
+        return $this;
+    }
+
+    public function getPhone(): ?string
+    {
+        return $this->phone;
+    }
+
+    public function setPhone(string $phone): static
+    {
+        $this->phone = $phone;
 
         return $this;
     }
