@@ -10,16 +10,17 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[Route('/api-v1', name: 'api_v1_', methods: ['GET'])]
+#[IsGranted('ROLE_ADMIN')]
 class UserController extends AbstractController
 {
     public function __construct(
@@ -40,10 +41,12 @@ class UserController extends AbstractController
     ): JsonResponse {
         $option = ['cost' => User::HASH_COST];
         $user = $serializer->deserialize($request->getContent(), User::class, 'json');
+        $content = $request->toArray();
+        $password = $content["password"];
         $user->setClient($client)
             ->setPassword(
                 password_hash(
-                    'usermaledatafixtures',
+                    $password,
                     PASSWORD_BCRYPT,
                     $option,
                 )
@@ -71,7 +74,7 @@ class UserController extends AbstractController
         ]);
 
         // Ajouter l'url de vérification 
-        $location = $this->urlGenerator->generate('api_v1_user', ['slug' => $client->getSlug(),'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $this->urlGenerator->generate('api_v1_user', ['slug' => $client->getSlug(), 'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }
@@ -121,14 +124,14 @@ class UserController extends AbstractController
         if (!$client) {
             throw new HttpException(402, 'Client non trouvé. Merci de vérifier vos données.');
         }
-        
+
         $updateUser->setClient($client);
 
         $this->manager->persist($updateUser);
         $this->manager->flush();
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
-    
+
 
     #[Route('/delete-user/{slug}/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(User $user): JsonResponse
