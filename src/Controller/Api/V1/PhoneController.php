@@ -4,16 +4,22 @@ namespace App\Controller\Api\V1;
 
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
+use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class PhoneController extends AbstractController
 {
+    public function __construct(private SerializerInterface $serializer,)
+    {}
+
+
     #[Route('/api-v1/phones', name: 'api_v1_phones', methods: ['GET'])]
     public function getPhones(
         PhoneRepository $phoneRepository,
@@ -30,26 +36,29 @@ class PhoneController extends AbstractController
             return $phoneRepository->findAllWithPagination($page);
         }); 
 
-        // Ignore attributes of related entities
-        return $this->json($phones, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'brand',
-                'images',
-                'phones',
-            ]
-        ]);
+        // Contourner l'erreur de référence circulaire
+        $attributesToIgnore = ["brand", "images", "phones"];
+        foreach ($attributesToIgnore as $attribute) {
+            $context = SerializationContext::create()->setAttribute($attribute, true);
+        }
+
+        $jsonPhones = $this->serializer->serialize($phones, 'json', $context);
+
+        return new JsonResponse($jsonPhones, Response::HTTP_OK, [], true);
     }
 
-    #[Route('/api-v1/phone/{slug}/{color}', name: 'api_v1_phone_slug', methods: ['GET'])]
+
+    #[Route('/api-v1/phone/{slug}/{color}', name: 'api_v1_phone', methods: ['GET'])]
     public function getPhone(Phone $phone): JsonResponse
     {
-        // Ignore attributes of related entities
-        return $this->json($phone, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'brand',
-                'images',
-                'phones',
-            ]
-        ]);
+        // Contourner l'erreur de référence circulaire
+        $attributesToIgnore = ["brand", "images", "phones"];
+        foreach ($attributesToIgnore as $attribute) {
+            $context = SerializationContext::create()->setAttribute($attribute, true);
+        }
+
+        $jsonPhone = $this->serializer->serialize($phone, 'json', $context);
+
+        return new JsonResponse($jsonPhone, Response::HTTP_OK, [], true);
     }
 }

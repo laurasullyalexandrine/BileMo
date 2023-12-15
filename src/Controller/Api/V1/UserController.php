@@ -18,7 +18,6 @@ use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 #[Route('/api-v1', name: 'api_v1_', methods: ['GET'])]
