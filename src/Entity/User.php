@@ -19,40 +19,58 @@ use Hateoas\Configuration\Annotation as Hateoas;
  *      ),
  * )
  * 
+ * @Serializer\XmlRoot("user")
+ * @Hateoas\Relation(
+ *      "update",
+ *      href = @Hateoas\Route(
+ *         "api_v1_update_user",
+ *          parameters = {"slug" = "expr(object.getClient().getSlug())", "id" = "expr(object.getId())"}
+ *      ),
+ * )
+ * 
+ *  @Serializer\XmlRoot("user")
+ * @Hateoas\Relation(
+ *      "delete",
+ *      href = @Hateoas\Route(
+ *         "api_v1_delete_user",
+ *          parameters = {"slug" = "expr(object.getClient().getSlug())", "id" = "expr(object.getId())"}
+ *      ),
+ * )
+ * 
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[UniqueEntity(fields: ['email'], message: "Cet email existe déjà. Merci de le modifier.")]
 class User
 {
     const HASH_COST = 12;
-    
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
     #[ORM\Column(length: 34)]
-    #[Assert\NotBlank(message:"Le prénom de l'utilisateur est obligatoire")]
+    #[Assert\NotBlank(message: "Le prénom de l'utilisateur est obligatoire")]
     private ?string $firstname = null;
 
     #[ORM\Column(length: 84)]
-    #[Assert\NotBlank(message:"Le nom de l'utilisateur est obligatoire")]
+    #[Assert\NotBlank(message: "Le nom de l'utilisateur est obligatoire")]
     private ?string $lastname = null;
 
     #[ORM\Column(length: 20)]
-    #[Assert\NotBlank(message:"Vous devez choisir la civilité de l'utilisateur")]
+    #[Assert\NotBlank(message: "Vous devez choisir la civilité de l'utilisateur")]
     private ?string $civility = null;
 
     #[ORM\Column(length: 10)]
-    #[Assert\NotBlank(message:"Le téléphone de l'utilisateur est obligatoire")]
+    #[Assert\NotBlank(message: "Le téléphone de l'utilisateur est obligatoire")]
     private ?string $phone = null;
 
     #[ORM\Column(length: 180, unique: true)]
-    #[Assert\NotBlank(message:"L'email de l'utilisateur est obligatoire")]
+    #[Assert\NotBlank(message: "L'email de l'utilisateur est obligatoire")]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message:"Le mot de passe de l'utilisateur est obligatoire. Il devra être changé à sa première connexion.")]
+    #[Assert\NotBlank(message: "Le mot de passe de l'utilisateur est obligatoire. Il devra être changé à sa première connexion.")]
     #[Assert\Length(min: 8, minMessage: "Le mot de passe doit faire au moins {{ limit }} caractères")]
     private ?string $password = null;
 
