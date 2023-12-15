@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Controller\Api\V1;
+namespace App\Controller\Api;
 
 use App\Entity\User;
 use App\Entity\Client;
 use App\Repository\UserRepository;
 use App\Repository\ClientRepository;
+use App\Service\VersioningService;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
@@ -20,7 +21,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-#[Route('/api-v1', name: 'api_v1_', methods: ['GET'])]
+#[Route('/api', name: 'api_', methods: ['GET'])]
 class UserController extends AbstractController
 {
     public function __construct(
@@ -31,6 +32,7 @@ class UserController extends AbstractController
         private UrlGeneratorInterface $urlGenerator,
         private TagAwareCacheInterface $cache,
         private SerializerInterface $serializer,
+        private VersioningService $versioningService
     ) {
     }
 
@@ -42,7 +44,7 @@ class UserController extends AbstractController
 
         // Récupérer les données reçues de la requête
         $newUser = $this->serializer->deserialize($request->getContent(), User::class, 'json');
-        
+
         $option = ['cost' => User::HASH_COST];
 
         $user = new User();
@@ -79,7 +81,7 @@ class UserController extends AbstractController
         $jsonUser = $this->serializer->serialize($user, 'json', $context);
 
         // Ajouter l'url de vérification 
-        $location = $this->urlGenerator->generate('api_v1_user', ['slug' => $client->getSlug(), 'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $this->urlGenerator->generate('api_user', ['slug' => $client->getSlug(), 'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }
@@ -107,8 +109,14 @@ class UserController extends AbstractController
             return $userRepository->findUsersByClient($client, $page);
         });
 
+        // Récupérer la version de l'API
+        $version = $this->versioningService->getVersion();
+
         $context = SerializationContext::create()->setAttribute("client", true);
 
+        // Editer la version
+        $context->setVersion($version);
+        
         $jsonUsers = $this->serializer->serialize($users, 'json', $context);
 
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
@@ -121,7 +129,11 @@ class UserController extends AbstractController
         SerializerInterface $serializer,
     ): JsonResponse {
 
+        $version = $this->versioningService->getVersion();
+
         $context = SerializationContext::create()->setAttribute("client", true);
+        
+        $context->setVersion($version);
 
         $jsonUser = $serializer->serialize($user, 'json', $context);
 
@@ -187,7 +199,7 @@ class UserController extends AbstractController
     public function deleteUser(User $user): JsonResponse
     {
         $this->cache->invalidateTags(["usersCache"]);
-        
+
         $this->manager->remove($user);
         $this->manager->flush();
 
