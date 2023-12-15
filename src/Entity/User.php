@@ -15,10 +15,9 @@ use Hateoas\Configuration\Annotation as Hateoas;
  *      "self",
  *      href = @Hateoas\Route(
  *         "api_v1_user",
- *          parameters = {"slug" = "expr(object.getSlug())", "id" = "expr(object.getId())"}
+ *          parameters = {"slug" = "expr(object.getClient().getSlug())", "id" = "expr(object.getId())"}
  *      ),
- *
- *      )
+ * )
  * 
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]

@@ -7,13 +7,15 @@ use App\Entity\Client;
 use App\Repository\UserRepository;
 use App\Repository\ClientRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use JMS\Serializer\SerializationContext;
+use JMS\Serializer\SerializerInterface;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
-use JMS\Serializer\Serializer;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -37,7 +39,7 @@ class UserController extends AbstractController
     #[Route('/create-user/{slug}', name: 'create_user', methods: ['POST'])]
     public function createUser(
         Request $request,
-        Serializer $serializer,
+        SerializerInterface $serializer,
         Client $client
     ): JsonResponse {
         $option = ['cost' => User::HASH_COST];
@@ -88,7 +90,7 @@ class UserController extends AbstractController
     ): JsonResponse {
         $page = $request->query->getInt('page', 1);
         $users = $this->userRepository->findUsersByClient($client, $page);
-
+       
         $idCache =  "getUsers-" . $page;
         $users = $this->cache->get($idCache, function(ItemInterface $item) use ($userRepository, $client, $page) {
             echo ("PAS ENCORE EN CACHE");
@@ -104,20 +106,22 @@ class UserController extends AbstractController
     }
 
     #[Route('/user/{slug}/{id}', name: 'user', methods: ['GET'])]
-    public function getOneUser(User $user): JsonResponse
+    public function getOneUser(
+        User $user, 
+        SerializerInterface $serializer,
+        ): JsonResponse
     {
-        return $this->json($user, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'client',
-            ]
-        ]);
+        $context = SerializationContext::create()->setAttribute("client", true);
+        $jsonUser = $serializer->serialize($user, 'json', $context);
+
+        return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
     }
 
 
     #[Route('/update-user/{slug}/{id}', name: 'update_user', methods: ['PUT'])]
     public function updateUser(
         Request $request,
-        Serializer $serializer,
+        SerializerInterface $serializer,
         User $user
     ): JsonResponse {
 
