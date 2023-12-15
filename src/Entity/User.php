@@ -14,7 +14,7 @@ use Hateoas\Configuration\Annotation as Hateoas;
  * @Hateoas\Relation(
  *      "self",
  *      href = @Hateoas\Route(
- *         "api_v1_user",
+ *         "api_user",
  *          parameters = {"slug" = "expr(object.getClient().getSlug())", "id" = "expr(object.getId())"}
  *      ),
  * )
@@ -23,7 +23,7 @@ use Hateoas\Configuration\Annotation as Hateoas;
  * @Hateoas\Relation(
  *      "update",
  *      href = @Hateoas\Route(
- *         "api_v1_update_user",
+ *         "api_update_user",
  *          parameters = {"slug" = "expr(object.getClient().getSlug())", "id" = "expr(object.getId())"}
  *      ),
  * )
@@ -32,7 +32,7 @@ use Hateoas\Configuration\Annotation as Hateoas;
  * @Hateoas\Relation(
  *      "delete",
  *      href = @Hateoas\Route(
- *         "api_v1_delete_user",
+ *         "api_delete_user",
  *          parameters = {"slug" = "expr(object.getClient().getSlug())", "id" = "expr(object.getId())"}
  *      ),
  * )

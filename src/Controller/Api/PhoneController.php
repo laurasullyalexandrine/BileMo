@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\Api\V1;
+namespace App\Controller\Api;
 
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;
@@ -20,7 +20,7 @@ class PhoneController extends AbstractController
     {}
 
 
-    #[Route('/api-v1/phones', name: 'api_v1_phones', methods: ['GET'])]
+    #[Route('/api/phones', name: 'api_phones', methods: ['GET'])]
     public function getPhones(
         PhoneRepository $phoneRepository,
         Request $request,
@@ -48,7 +48,7 @@ class PhoneController extends AbstractController
     }
 
 
-    #[Route('/api-v1/phone/{slug}/{color}', name: 'api_v1_phone', methods: ['GET'])]
+    #[Route('/api/phone/{slug}/{color}', name: 'api_phone', methods: ['GET'])]
     public function getPhone(Phone $phone): JsonResponse
     {
         // Contourner l'erreur de référence circulaire

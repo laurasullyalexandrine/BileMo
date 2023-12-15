@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\Api\V1;
+namespace App\Controller\Api;
 
 use App\Entity\User;
 use App\Entity\Client;
@@ -20,7 +20,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-#[Route('/api-v1', name: 'api_v1_', methods: ['GET'])]
+#[Route('/api', name: 'api_', methods: ['GET'])]
 class UserController extends AbstractController
 {
     public function __construct(
@@ -79,7 +79,7 @@ class UserController extends AbstractController
         $jsonUser = $this->serializer->serialize($user, 'json', $context);
 
         // Ajouter l'url de vérification 
-        $location = $this->urlGenerator->generate('api_v1_user', ['slug' => $client->getSlug(), 'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $this->urlGenerator->generate('api_user', ['slug' => $client->getSlug(), 'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }

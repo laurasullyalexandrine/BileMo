@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\Api\V1;
+namespace App\Controller\Api;
 
 use App\Entity\Client;
 use App\Repository\ClientRepository;

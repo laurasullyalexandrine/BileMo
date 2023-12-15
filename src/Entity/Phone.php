@@ -16,7 +16,7 @@ use Hateoas\Configuration\Annotation as Hateoas;
  * @Hateoas\Relation(
  *      "self",
  *      href = @Hateoas\Route(
- *         "api_v1_phone",
+ *         "api_phone",
  *           parameters = {"slug" = "expr(object.getSlug())", "color" = "expr(object.getColor())"}
  *      ),
  * )
