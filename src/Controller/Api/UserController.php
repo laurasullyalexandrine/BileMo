@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Entity\Client;
 use App\Repository\UserRepository;
 use App\Repository\ClientRepository;
+use App\Service\VersioningService;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
@@ -31,6 +32,7 @@ class UserController extends AbstractController
         private UrlGeneratorInterface $urlGenerator,
         private TagAwareCacheInterface $cache,
         private SerializerInterface $serializer,
+        private VersioningService $versioningService
     ) {
     }
 
@@ -42,7 +44,7 @@ class UserController extends AbstractController
 
         // Récupérer les données reçues de la requête
         $newUser = $this->serializer->deserialize($request->getContent(), User::class, 'json');
-        
+
         $option = ['cost' => User::HASH_COST];
 
         $user = new User();
@@ -107,8 +109,14 @@ class UserController extends AbstractController
             return $userRepository->findUsersByClient($client, $page);
         });
 
+        // Récupérer la version de l'API
+        $version = $this->versioningService->getVersion();
+
         $context = SerializationContext::create()->setAttribute("client", true);
 
+        // Editer la version
+        $context->setVersion($version);
+        
         $jsonUsers = $this->serializer->serialize($users, 'json', $context);
 
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
@@ -121,7 +129,11 @@ class UserController extends AbstractController
         SerializerInterface $serializer,
     ): JsonResponse {
 
+        $version = $this->versioningService->getVersion();
+
         $context = SerializationContext::create()->setAttribute("client", true);
+        
+        $context->setVersion($version);
 
         $jsonUser = $serializer->serialize($user, 'json', $context);
 
@@ -187,7 +199,7 @@ class UserController extends AbstractController
     public function deleteUser(User $user): JsonResponse
     {
         $this->cache->invalidateTags(["usersCache"]);
-        
+
         $this->manager->remove($user);
         $this->manager->flush();
 
