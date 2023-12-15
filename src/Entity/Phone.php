@@ -8,7 +8,20 @@ use Doctrine\Common\Collections\Collection;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+/**
+ * @Serializer\XmlRoot("phone")
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *         "api_v1_phone",
+ *           parameters = {"slug" = "expr(object.getSlug())", "color" = "expr(object.getColor())"}
+ *      ),
+ * )
+ * 
+ */
 #[ORM\Entity(repositoryClass: PhoneRepository::class)]
 class Phone
 {
