@@ -9,7 +9,6 @@ use App\Repository\ClientRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
-use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,35 +30,42 @@ class UserController extends AbstractController
         private ClientRepository $clientRepository,
         private ValidatorInterface $validator,
         private UrlGeneratorInterface $urlGenerator,
-        private TagAwareCacheInterface $cache
+        private TagAwareCacheInterface $cache,
+        private SerializerInterface $serializer,
     ) {
     }
-
 
     #[Route('/create-user/{slug}', name: 'create_user', methods: ['POST'])]
     public function createUser(
         Request $request,
-        SerializerInterface $serializer,
         Client $client
     ): JsonResponse {
+
+        // Récupérer les données reçues de la requête
+        $newUser = $this->serializer->deserialize($request->getContent(), User::class, 'json');
+        
         $option = ['cost' => User::HASH_COST];
-        $user = $serializer->deserialize($request->getContent(), User::class, 'json');
-        $content = $request->toArray();
-        $password = $content["password"];
-        $user->setClient($client)
+
+        $user = new User();
+        $user->setFirstname($newUser->getFirstname())
+            ->setLastname($newUser->getLastname())
+            ->setCivility($newUser->getCivility())
+            ->setPhone($newUser->getPhone())
+            ->setEmail($newUser->getEmail())
             ->setPassword(
                 password_hash(
-                    $password,
+                    $newUser->getPassword(),
                     PASSWORD_BCRYPT,
                     $option,
                 )
             );
+        $user->setClient($client);
 
         // Vérifier si il y a une erreur lors de la validation du formulaire
         $errors = $this->validator->validate($user);
         if ($errors->count() > 0) {
             return new JsonResponse(
-                $serializer->serialize($errors, 'json'),
+                $this->serializer->serialize($errors, 'json'),
                 JsonResponse::HTTP_BAD_REQUEST,
                 [],
                 true
@@ -70,11 +76,8 @@ class UserController extends AbstractController
         $this->manager->flush();
 
         // Contourner l'erreur circulaire
-        $jsonUser = $this->json($user, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'client',
-            ]
-        ]);
+        $context = SerializationContext::create()->setAttribute("client", true);
+        $jsonUser = $this->serializer->serialize($user, 'json', $context);
 
         // Ajouter l'url de vérification 
         $location = $this->urlGenerator->generate('api_v1_user', ['slug' => $client->getSlug(), 'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
@@ -82,36 +85,45 @@ class UserController extends AbstractController
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
+
     #[Route('/users/{slug}', name: 'users', methods: ['GET'])]
     public function getUsers(
         Client $client,
         Request $request,
         UserRepository $userRepository
     ): JsonResponse {
+
+        // Récupérer la parmètre page depuis l'url
         $page = $request->query->getInt('page', 1);
+
         $users = $this->userRepository->findUsersByClient($client, $page);
-       
+
+        // Créer le nom du cache
         $idCache =  "getUsers-" . $page;
-        $users = $this->cache->get($idCache, function(ItemInterface $item) use ($userRepository, $client, $page) {
+
+        // Mettre les données en cache
+        $users = $this->cache->get($idCache, function (ItemInterface $item) use ($userRepository, $client, $page) {
             echo ("PAS ENCORE EN CACHE");
             $item->tag("usersCache");
             return $userRepository->findUsersByClient($client, $page);
-        }); 
+        });
 
-        return $this->json($users, 200, [], [
-            AbstractNormalizer::IGNORED_ATTRIBUTES => [
-                'client',
-            ]
-        ]);
+        $context = SerializationContext::create()->setAttribute("client", true);
+
+        $jsonUsers = $this->serializer->serialize($users, 'json', $context);
+
+        return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
     }
+
 
     #[Route('/user/{slug}/{id}', name: 'user', methods: ['GET'])]
     public function getOneUser(
-        User $user, 
+        User $user,
         SerializerInterface $serializer,
-        ): JsonResponse
-    {
+    ): JsonResponse {
+
         $context = SerializationContext::create()->setAttribute("client", true);
+
         $jsonUser = $serializer->serialize($user, 'json', $context);
 
         return new JsonResponse($jsonUser, Response::HTTP_OK, [], true);
@@ -127,8 +139,9 @@ class UserController extends AbstractController
 
         // Récupérer les données reçues de la requête
         $newUser = $serializer->deserialize($request->getContent(), User::class, 'json');
-        
+
         $option = ['cost' => User::HASH_COST];
+
         // Editer le user
         $user->setFirstname($newUser->getFirstname())
             ->setLastname($newUser->getLastname())
@@ -141,7 +154,7 @@ class UserController extends AbstractController
                     PASSWORD_BCRYPT,
                     $option,
                 )
-                );
+            );
 
         $errors = $this->validator->validate($user);
         if ($errors->count() > 0) {
@@ -154,6 +167,7 @@ class UserController extends AbstractController
         $clientSlug = $content["client_slug"] ?? null;
         $client = $this->clientRepository->findOneBySlug($clientSlug);
 
+        // Vérifier que le bon client est connecté
         if (!$client) {
             throw new HttpException(402, 'Client non trouvé. Merci de vérifier vos données.');
         }
@@ -165,6 +179,7 @@ class UserController extends AbstractController
 
         // Vider la cache
         $this->cache->invalidateTags(["usersCache"]);
+
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);
     }
 
@@ -173,6 +188,7 @@ class UserController extends AbstractController
     public function deleteUser(User $user): JsonResponse
     {
         $this->cache->invalidateTags(["usersCache"]);
+        
         $this->manager->remove($user);
         $this->manager->flush();
 
