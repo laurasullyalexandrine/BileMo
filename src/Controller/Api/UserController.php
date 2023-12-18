@@ -36,7 +36,7 @@ class UserController extends AbstractController
     ) {
     }
 
-    #[Route('/create-user/{slug}', name: 'create_user', methods: ['POST'])]
+    #[Route('/users/{slug}', name: 'create_user', methods: ['POST'])]
     public function createUser(
         Request $request,
         Client $client
@@ -123,7 +123,7 @@ class UserController extends AbstractController
     }
 
 
-    #[Route('/user/{slug}/{id}', name: 'user', methods: ['GET'])]
+    #[Route('/users/{slug}/{id}', name: 'user', methods: ['GET'])]
     public function getOneUser(
         User $user,
         SerializerInterface $serializer,
@@ -141,7 +141,7 @@ class UserController extends AbstractController
     }
 
 
-    #[Route('/update-user/{slug}/{id}', name: 'update_user', methods: ['PUT'])]
+    #[Route('/users/{slug}/{id}', name: 'update_user', methods: ['PUT'])]
     public function updateUser(
         Request $request,
         SerializerInterface $serializer,
@@ -173,7 +173,7 @@ class UserController extends AbstractController
         }
 
         $content = $request->toArray();
-
+        dd($content);
         // Récupérer le client 
         $clientSlug = $content["client_slug"] ?? null;
         $client = $this->clientRepository->findOneBySlug($clientSlug);
@@ -195,7 +195,7 @@ class UserController extends AbstractController
     }
 
 
-    #[Route('/delete-user/{slug}/{id}', name: 'delete_user', methods: ['DELETE'])]
+    #[Route('/users/{slug}/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(User $user): JsonResponse
     {
         $this->cache->invalidateTags(["usersCache"]);
