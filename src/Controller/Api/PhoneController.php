@@ -58,7 +58,7 @@ class PhoneController extends AbstractController
     }
 
 
-    #[Route('/api/phone/{slug}/{color}', name: 'api_phone', methods: ['GET'])]
+    #[Route('/api/phones/{slug}/{color}', name: 'api_phone', methods: ['GET'])]
     public function getPhone(Phone $phone): JsonResponse
     {
         $version = $this->versioningService->getVersion();
