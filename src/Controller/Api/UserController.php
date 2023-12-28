@@ -20,6 +20,8 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use OpenApi\Annotations as OA;
+use Nelmio\ApiDocBundle\Annotation\Model;
 
 #[Route('/api', name: 'api_', methods: ['GET'])]
 class UserController extends AbstractController
@@ -34,6 +36,74 @@ class UserController extends AbstractController
         private SerializerInterface $serializer,
         private VersioningService $versioningService
     ) {
+    }
+
+    /**
+     * Cette méthode permet de récupérer l'ensemble des utilisateurs d'un client.
+     *
+     * @OA\Get(
+     *     path="/api/users",
+     *     summary="Récupérer la liste des utilisateurs",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Renvoie la liste des utilisateurs",
+     *         @OA\JsonContent(
+     *            type="array",
+     *            @OA\Items(ref=@Model(type=User::class))
+     *         )
+     *     )
+     * )
+     * @OA\Parameter(
+     *     name="page",
+     *     in="query",
+     *     description="La page que l'on veut récupérer",
+     *     @OA\Schema(type="int")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="limit",
+     *     in="query",
+     *     description="Le nombre d'éléments que l'on veut récupérer",
+     *     @OA\Schema(type="int")
+     * )
+     * @OA\Tag(name="Users")
+     *
+     * @param Client $client
+     * @param Request $request
+     * @param UserRepository $userRepository
+     * @return JsonResponse
+     */
+    #[Route('/users/{slug}', name: 'users', methods: ['GET'])]
+    public function getAllUsers(
+        Client $client,
+        Request $request,
+        UserRepository $userRepository
+    ): JsonResponse {
+
+        // Récupérer le parmètre page depuis l'url
+        $page = $request->query->getInt('page', 1);
+
+        // Créer le nom du cache
+        $idCache =  "getUsers-" . $page;
+
+        // Mettre les données en cache
+        $users = $this->cache->get($idCache, function (ItemInterface $item) use ($userRepository, $client, $page) {
+            echo ("PAS ENCORE EN CACHE");
+            $item->tag("usersCache");
+            return $userRepository->findUsersByClient($client, $page);
+        });
+
+        // Récupérer la version de l'API
+        $version = $this->versioningService->getVersion();
+
+        $context = SerializationContext::create()->setAttribute("client", true);
+
+        // Editer la version
+        $context->setVersion($version);
+
+        $jsonUsers = $this->serializer->serialize($users, 'json', $context);
+
+        return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
     }
 
     #[Route('/users/{slug}', name: 'create_user', methods: ['POST'])]
@@ -87,40 +157,7 @@ class UserController extends AbstractController
     }
 
 
-    #[Route('/users/{slug}', name: 'users', methods: ['GET'])]
-    public function getUsers(
-        Client $client,
-        Request $request,
-        UserRepository $userRepository
-    ): JsonResponse {
 
-        // Récupérer la parmètre page depuis l'url
-        $page = $request->query->getInt('page', 1);
-
-        $users = $this->userRepository->findUsersByClient($client, $page);
-
-        // Créer le nom du cache
-        $idCache =  "getUsers-" . $page;
-
-        // Mettre les données en cache
-        $users = $this->cache->get($idCache, function (ItemInterface $item) use ($userRepository, $client, $page) {
-            echo ("PAS ENCORE EN CACHE");
-            $item->tag("usersCache");
-            return $userRepository->findUsersByClient($client, $page);
-        });
-
-        // Récupérer la version de l'API
-        $version = $this->versioningService->getVersion();
-
-        $context = SerializationContext::create()->setAttribute("client", true);
-
-        // Editer la version
-        $context->setVersion($version);
-        
-        $jsonUsers = $this->serializer->serialize($users, 'json', $context);
-
-        return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
-    }
 
 
     #[Route('/users/{slug}/{id}', name: 'user', methods: ['GET'])]
@@ -132,7 +169,7 @@ class UserController extends AbstractController
         $version = $this->versioningService->getVersion();
 
         $context = SerializationContext::create()->setAttribute("client", true);
-        
+
         $context->setVersion($version);
 
         $jsonUser = $serializer->serialize($user, 'json', $context);
@@ -173,7 +210,7 @@ class UserController extends AbstractController
         }
 
         $content = $request->toArray();
-        dd($content);
+
         // Récupérer le client 
         $clientSlug = $content["client_slug"] ?? null;
         $client = $this->clientRepository->findOneBySlug($clientSlug);
