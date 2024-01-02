@@ -2,13 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\PhoneRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\PhoneRepository;
+use Gedmo\Mapping\Annotation as Gedmo;
+use JMS\Serializer\Annotation\Exclude;
+use Doctrine\Common\Collections\Collection;
 use JMS\Serializer\Annotation as Serializer;
+use Doctrine\Common\Collections\ArrayCollection;
 use Hateoas\Configuration\Annotation as Hateoas;
 
 /**
@@ -81,9 +82,11 @@ class Phone
     private ?\DateTimeImmutable $updated_at = null;
 
     #[ORM\OneToMany(mappedBy: 'phone', targetEntity: Image::class, cascade: ['persist'], orphanRemoval: true)]
+    #[Exclude()]
     private Collection $images;
 
     #[ORM\ManyToOne(inversedBy: 'phones', cascade: ['persist'])]
+    // #[Exclude()]
     private ?Brand $brand = null;
 
     public function __construct()

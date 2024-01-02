@@ -84,7 +84,7 @@ class UserController extends AbstractController
         $page = $request->query->getInt('page', 1);
 
         // Créer le nom du cache
-        $idCache =  "getUsers-" . $page;
+        $idCache =  "getAllUsers-" . $page;
 
         // Mettre les données en cache
         $users = $this->cache->get($idCache, function (ItemInterface $item) use ($userRepository, $client, $page) {
