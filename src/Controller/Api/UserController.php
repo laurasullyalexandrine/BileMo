@@ -39,14 +39,14 @@ class UserController extends AbstractController
     }
 
     /**
-     * Cette méthode permet de récupérer l'ensemble des utilisateurs d'un client.
+     * This method retrieves all the users of a client.
      *
      * @OA\Get(
      *     path="/api/users",
-     *     summary="Récupérer la liste des utilisateurs",
+     *     summary="Retrieve user list",
      *     @OA\Response(
      *         response=200,
-     *         description="Renvoie la liste des utilisateurs",
+     *         description="Returns the list of users",
      *         @OA\JsonContent(
      *            type="array",
      *            @OA\Items(ref=@Model(type=User::class))
@@ -56,14 +56,14 @@ class UserController extends AbstractController
      * @OA\Parameter(
      *     name="page",
      *     in="query",
-     *     description="La page que l'on veut récupérer",
+     *     description="The page you want to retrieve",
      *     @OA\Schema(type="int")
      * )
      * 
      * @OA\Parameter(
      *     name="limit",
      *     in="query",
-     *     description="Le nombre d'éléments que l'on veut récupérer",
+     *     description="The number of elements to be retrieved",
      *     @OA\Schema(type="int")
      * )
      * @OA\Tag(name="Users")
@@ -80,25 +80,25 @@ class UserController extends AbstractController
         UserRepository $userRepository
     ): JsonResponse {
 
-        // Récupérer le parmètre page depuis l'url
+        // Recover page perimeter from url
         $page = $request->query->getInt('page', 1);
 
-        // Créer le nom du cache
+        // Create cache name
         $idCache =  "getAllUsers-" . $page;
 
-        // Mettre les données en cache
+        // Caching data
         $users = $this->cache->get($idCache, function (ItemInterface $item) use ($userRepository, $client, $page) {
             echo ("PAS ENCORE EN CACHE");
             $item->tag("usersCache");
             return $userRepository->findUsersByClient($client, $page);
         });
 
-        // Récupérer la version de l'API
+        // Retrieve API version
         $version = $this->versioningService->getVersion();
 
         $context = SerializationContext::create()->setAttribute("client", true);
 
-        // Editer la version
+        // Edit version
         $context->setVersion($version);
 
         $jsonUsers = $this->serializer->serialize($users, 'json', $context);
@@ -112,7 +112,7 @@ class UserController extends AbstractController
         Client $client
     ): JsonResponse {
 
-        // Récupérer les données reçues de la requête
+        // Retrieve data received from the query
         $newUser = $this->serializer->deserialize($request->getContent(), User::class, 'json');
 
         $option = ['cost' => User::HASH_COST];
@@ -132,7 +132,7 @@ class UserController extends AbstractController
             );
         $user->setClient($client);
 
-        // Vérifier si il y a une erreur lors de la validation du formulaire
+        // Check for errors during form validation
         $errors = $this->validator->validate($user);
         if ($errors->count() > 0) {
             return new JsonResponse(
@@ -142,22 +142,19 @@ class UserController extends AbstractController
                 true
             );
         }
-        // Si pas d'erreur enregistrer le nouvel utilisateur en BDD
+        // If no error, register new user in DB
         $this->manager->persist($user);
         $this->manager->flush();
 
-        // Contourner l'erreur circulaire
+        // Bypassing the circular reference
         $context = SerializationContext::create()->setAttribute("client", true);
         $jsonUser = $this->serializer->serialize($user, 'json', $context);
 
-        // Ajouter l'url de vérification 
+        // Add verification url
         $location = $this->urlGenerator->generate('api_user', ['slug' => $client->getSlug(), 'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }
-
-
-
 
 
     #[Route('/users/{slug}/{id}', name: 'user', methods: ['GET'])]
@@ -185,12 +182,12 @@ class UserController extends AbstractController
         User $user
     ): JsonResponse {
 
-        // Récupérer les données reçues de la requête
+        // Retrieve data received from the query
         $newUser = $serializer->deserialize($request->getContent(), User::class, 'json');
 
         $option = ['cost' => User::HASH_COST];
 
-        // Editer le user
+        // Edit user
         $user->setFirstname($newUser->getFirstname())
             ->setLastname($newUser->getLastname())
             ->setCivility($newUser->getCivility())
@@ -211,11 +208,11 @@ class UserController extends AbstractController
 
         $content = $request->toArray();
 
-        // Récupérer le client 
+        // Customer recovery
         $clientSlug = $content["client_slug"] ?? null;
         $client = $this->clientRepository->findOneBySlug($clientSlug);
 
-        // Vérifier que le bon client est connecté
+        // Check that the right customer is connected
         if (!$client) {
             throw new HttpException(402, 'Client non trouvé. Merci de vérifier vos données.');
         }
@@ -225,7 +222,7 @@ class UserController extends AbstractController
         $this->manager->persist($user);
         $this->manager->flush();
 
-        // Vider la cache
+        // Empty cache
         $this->cache->invalidateTags(["usersCache"]);
 
         return new JsonResponse(null, JsonResponse::HTTP_NO_CONTENT);

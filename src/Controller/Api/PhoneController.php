@@ -27,14 +27,14 @@ class PhoneController extends AbstractController
     }
 
     /**
-     * Cette méthode permet de récupérer l'ensemble des smartphones BileMo.
+     * This method recovers all BileMo smartphones.
      *
      * @OA\Get(
      *     path="/api/phones",
-     *     summary="Récupérer la liste des smartphones",
+     *     summary="Retrieve list of smartphones",
      *     @OA\Response(
      *         response=200,
-     *         description="Renvoie la liste des smartphones",
+     *         description="Returns a list of smartphones",
      *         @OA\JsonContent(
      *            type="array",
      *            @OA\Items(ref=@Model(type=Phone::class))
@@ -44,14 +44,14 @@ class PhoneController extends AbstractController
      * @OA\Parameter(
      *     name="page",
      *     in="query",
-     *     description="La page que l'on veut récupérer",
+     *     description="The page you want to retrieve",
      *     @OA\Schema(type="int")
      * )
      * 
      * @OA\Parameter(
      *     name="limit",
      *     in="query",
-     *     description="Le nombre d'éléments que l'on veut récupérer",
+     *     description="The number of elements to be retrieved",
      *     @OA\Schema(type="int")
      * )
      * @OA\Tag(name="Phones")
@@ -70,23 +70,23 @@ class PhoneController extends AbstractController
 
         $page = $request->query->getInt('page', 1);
 
-        // Mettre en cache 
+        // Caching
         $idCache =  "getAllPhones-" . $page;
         $phones = $cache->get($idCache, function (ItemInterface $item) use ($phoneRepository, $page) {
             $item->tag("phonesCache");
             return $phoneRepository->findAllWithPagination($page);
         });
 
-        // Récupérer la version de l'API
+        // Retrieve API version
         $version = $this->versioningService->getVersion();
 
-        // Contourner l'erreur de référence circulaire
+        // Bypassing the circular reference
         $attributesToIgnore = ["brand", "images", "phones"];
         foreach ($attributesToIgnore as $attribute) {
             $context = SerializationContext::create()->setAttribute($attribute, true);
         }
 
-        // Editer la version
+        // Edit version
         $context->setVersion($version);
 
         $jsonPhones = $this->serializer->serialize($phones, 'json', $context);
@@ -95,9 +95,6 @@ class PhoneController extends AbstractController
     }
 
 
-    /**
-     * 
-     */
     #[Route('/phones/{slug}/{color}', name: 'phone', methods: ['GET'])]
     public function getPhone(Phone $phone): JsonResponse
     {
