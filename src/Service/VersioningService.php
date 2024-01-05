@@ -22,7 +22,7 @@ class VersioningService
      */
     public function getVersion(): string
     {
-        // Récupèrer le paramètre de la version défini dans le fichier service.yaml
+        // Edit versionRecover the version parameter defined in the service.yaml file
         $version = $this->defaultVersion;
 
         $request = $this->requestStack->getCurrentRequest();

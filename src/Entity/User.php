@@ -8,6 +8,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 use JMS\Serializer\Annotation as Serializer;
 use Hateoas\Configuration\Annotation as Hateoas;
+use JMS\Serializer\Annotation\Exclude;
 
 /**
  * @Serializer\XmlRoot("user")
@@ -81,6 +82,7 @@ class User
     private ?\DateTimeImmutable $updated_at = null;
 
     #[ORM\ManyToOne(inversedBy: 'users', cascade: ['persist'])]
+    #[Exclude()]
     private ?Client $client = null;
 
     public function __construct()

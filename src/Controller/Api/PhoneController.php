@@ -14,7 +14,10 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use OpenApi\Annotations as OA;
+use Nelmio\ApiDocBundle\Annotation\Model;
 
+#[Route('/api', name: 'api_', methods: ['GET'])]
 class PhoneController extends AbstractController
 {
     public function __construct(
@@ -23,9 +26,43 @@ class PhoneController extends AbstractController
     ) {
     }
 
-
-    #[Route('/api/phones', name: 'api_phones', methods: ['GET'])]
-    public function getPhones(
+    /**
+     * This method recovers all BileMo smartphones.
+     *
+     * @OA\Get(
+     *     path="/api/phones",
+     *     summary="Retrieve list of smartphones",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Returns a list of smartphones",
+     *         @OA\JsonContent(
+     *            type="array",
+     *            @OA\Items(ref=@Model(type=Phone::class))
+     *         )
+     *     )
+     * )
+     * @OA\Parameter(
+     *     name="page",
+     *     in="query",
+     *     description="The page you want to retrieve",
+     *     @OA\Schema(type="int")
+     * )
+     * 
+     * @OA\Parameter(
+     *     name="limit",
+     *     in="query",
+     *     description="The number of elements to be retrieved",
+     *     @OA\Schema(type="int")
+     * )
+     * @OA\Tag(name="Phones")
+     * 
+     * @param PhoneRepository $phoneRepository
+     * @param Request $request
+     * @param TagAwareCacheInterface $cache
+     * @return JsonResponse
+     */
+    #[Route('/phones', name: 'phones', methods: ['GET'])]
+    public function getAllPhones(
         PhoneRepository $phoneRepository,
         Request $request,
         TagAwareCacheInterface $cache
@@ -33,23 +70,23 @@ class PhoneController extends AbstractController
 
         $page = $request->query->getInt('page', 1);
 
-        // Mettre en cache 
-        $idCache =  "getPhones-" . $page;
+        // Caching
+        $idCache =  "getAllPhones-" . $page;
         $phones = $cache->get($idCache, function (ItemInterface $item) use ($phoneRepository, $page) {
             $item->tag("phonesCache");
             return $phoneRepository->findAllWithPagination($page);
         });
 
-        // Récupérer la version de l'API
+        // Retrieve API version
         $version = $this->versioningService->getVersion();
 
-        // Contourner l'erreur de référence circulaire
+        // Bypassing the circular reference
         $attributesToIgnore = ["brand", "images", "phones"];
         foreach ($attributesToIgnore as $attribute) {
             $context = SerializationContext::create()->setAttribute($attribute, true);
         }
 
-        // Editer la version
+        // Edit version
         $context->setVersion($version);
 
         $jsonPhones = $this->serializer->serialize($phones, 'json', $context);
@@ -58,7 +95,7 @@ class PhoneController extends AbstractController
     }
 
 
-    #[Route('/api/phones/{slug}/{color}', name: 'api_phone', methods: ['GET'])]
+    #[Route('/phones/{slug}/{color}', name: 'phone', methods: ['GET'])]
     public function getPhone(Phone $phone): JsonResponse
     {
         $version = $this->versioningService->getVersion();
