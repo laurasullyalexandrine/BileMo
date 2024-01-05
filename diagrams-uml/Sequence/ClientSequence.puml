@@ -1,0 +1,40 @@
+@startuml ClientSequence
+
+skinparam responseCommentBelowArrow true
+skinparam SequenceCommentAlignment center
+
+actor Client as Client #Orange
+
+entity User as User #Pink
+entity Phone as Phone #Pink
+
+database BileMo as BileMo #LightYellow
+
+Client -> BileMo: demander JWT
+alt cas réussi
+BileMo -> BileMo: générer JWT
+BileMo -> Client: retourner le JWT
+
+Client -> BileMo: envoyer JWT pour authentification
+BileMo-> Client: valider authentification 
+else identification invalides 401
+BileMo-> Client: échec de l'authentification
+
+Client -> Phone: consulter liste des téléphones
+Phone -> Client: afficher tous les téléphones
+
+Client -> User: ajout d'un utilisateur
+User -> Client: valider ajout utilisateur
+else échec ajout utilisateur
+Client -> User: l'email existe déjà sur l'API BileMo
+
+Client -> User: consulter fiche utilisateur
+User -> Client: afficher utilisateur
+else 404
+Client -> User: cette utilisateur n'existe pas
+
+Client -> User: supprimer un utilisateur
+User -> Client: valider suppression utilisateur
+
+end
+@enduml
