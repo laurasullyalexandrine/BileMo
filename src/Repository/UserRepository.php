@@ -18,12 +18,13 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
  */
 class UserRepository extends ServiceEntityRepository
 {
+    const DEFAULT_LIMIT = 10;
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, User::class);
     }
 
-    public function findUsersByClient(Client $client, int $page, int $maxResult = 10): ?array
+    public function findUsersByClient(Client $client, int $page, int $maxResult = self::DEFAULT_LIMIT): ?array
     {
         $result = [];
         $query = $this->createQueryBuilder('u')
