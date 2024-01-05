@@ -4,24 +4,27 @@ namespace App\Controller\Api;
 
 use App\Entity\User;
 use App\Entity\Client;
+use OpenApi\Annotations as OA;
 use App\Repository\UserRepository;
-use App\Repository\ClientRepository;
 use App\Service\VersioningService;
+use App\Repository\ClientRepository;
+use JMS\Serializer\SerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializationContext;
-use JMS\Serializer\SerializerInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use OpenApi\Annotations as OA;
-use Nelmio\ApiDocBundle\Annotation\Model;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 #[Route('/api', name: 'api_', methods: ['GET'])]
 class UserController extends AbstractController
@@ -34,7 +37,8 @@ class UserController extends AbstractController
         private UrlGeneratorInterface $urlGenerator,
         private TagAwareCacheInterface $cache,
         private SerializerInterface $serializer,
-        private VersioningService $versioningService
+        private VersioningService $versioningService,
+        private TokenStorageInterface $token,
     ) {
     }
 
@@ -80,6 +84,9 @@ class UserController extends AbstractController
         UserRepository $userRepository
     ): JsonResponse {
 
+        if ($client !== $this->token->getToken()->getUser()) {
+            throw new AccessDeniedHttpException("Accès refusé: Vous n'avez pas accès à cette ressource.");
+        }
         // Recover page perimeter from url
         $page = $request->query->getInt('page', 1);
 
@@ -111,6 +118,10 @@ class UserController extends AbstractController
         Request $request,
         Client $client
     ): JsonResponse {
+
+        if ($client !== $this->token->getToken()->getUser()) {
+            throw new AccessDeniedHttpException("Accès refusé: Vous n'avez pas accès à cette ressource.");
+        }
 
         // Retrieve data received from the query
         $newUser = $this->serializer->deserialize($request->getContent(), User::class, 'json');
@@ -159,10 +170,18 @@ class UserController extends AbstractController
 
     #[Route('/users/{slug}/{id}', name: 'user', methods: ['GET'])]
     public function getOneUser(
+        Request $request,
         User $user,
         SerializerInterface $serializer,
     ): JsonResponse {
 
+        $attributes = $request->attributes;
+        $slug = $attributes->get('slug');
+        $client = $this->clientRepository->findOneBySlug($slug);
+
+        if ($client !== $this->token->getToken()->getUser()) {
+            throw new AccessDeniedHttpException("Accès refusé: Vous n'avez pas accès à cette ressource.");
+        }
         $version = $this->versioningService->getVersion();
 
         $context = SerializationContext::create()->setAttribute("client", true);
@@ -181,6 +200,14 @@ class UserController extends AbstractController
         SerializerInterface $serializer,
         User $user
     ): JsonResponse {
+
+        $attributes = $request->attributes;
+        $slug = $attributes->get('slug');
+        $client = $this->clientRepository->findOneBySlug($slug);
+        
+        if ($client !== $this->token->getToken()->getUser()) {
+            throw new AccessDeniedHttpException("Accès refusé: Vous n'avez pas accès à cette ressource.");
+        }
 
         // Retrieve data received from the query
         $newUser = $serializer->deserialize($request->getContent(), User::class, 'json');
@@ -230,8 +257,18 @@ class UserController extends AbstractController
 
 
     #[Route('/users/{slug}/{id}', name: 'delete_user', methods: ['DELETE'])]
-    public function deleteUser(User $user): JsonResponse
+    public function deleteUser(
+        Request $request,
+        User $user): JsonResponse
     {
+        $attributes = $request->attributes;
+        $slug = $attributes->get('slug');
+        $client = $this->clientRepository->findOneBySlug($slug);
+        
+        if ($client !== $this->token->getToken()->getUser()) {
+            throw new AccessDeniedHttpException("Accès refusé: Vous n'avez pas accès à cette ressource.");
+        }
+
         $this->cache->invalidateTags(["usersCache"]);
 
         $this->manager->remove($user);
