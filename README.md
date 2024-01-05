@@ -40,3 +40,6 @@ Au lieu de vendre directement des produits sur le site web, l'entreprise fournit
 [Documentation LexikJWTAuthenticationBundle](https://symfony.com/bundles/LexikJWTAuthenticationBundle/current/index.html)
 
 [Documentation NelmioApiDocBundle](https://symfony.com/bundles/NelmioApiDocBundle/current/index.html)
+
+Accédez à la documentation de l'API BileMo
+[Documentation API BileMo](http://localhost:8080/api/doc)
