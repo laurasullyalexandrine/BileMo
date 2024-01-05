@@ -1,9 +1,0 @@
-@startuml ImageManager
-
-Class ImageManager {
-
-    + uploadImage(Image Image, Phone Phone)
-    + updateImage(Image Image, Phone Phone)
-    + deleteImage(Image Image, Phone Phone)
-
-}

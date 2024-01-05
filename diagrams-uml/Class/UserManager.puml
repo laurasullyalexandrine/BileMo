@@ -5,7 +5,6 @@ Class UserManager {
     + addUser()
     + updateUser(User user)
     + deleteUser(User user)
-    + resetPassword(User user)
     
     }
 

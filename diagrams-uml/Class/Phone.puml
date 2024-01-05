@@ -1,12 +1,10 @@
 @startuml Phone
 
-!include PhoneManager.puml
 !include User.puml 
 !include UserManager.puml
 !include Brand.puml
 !include Client.puml
 !include Image.puml 
-!include ImageManager.puml
 
 Class Phone {
     
@@ -37,12 +35,12 @@ Class Phone {
     - updated_at : Datetime
 }
 
-User *-"1" Client: create <
-Phone *--"1" Brand: have <>
-Phone "1"--* Image: have <
 
-PhoneManager -- Phone: exec
-UserManager -- User: exec
-ImageManager -- Image: exec
+Client "1"-* User: create <
+Brand "1"-* Phone: have <>
+Phone "1"-* Image: have <
+
+User - UserManager: exec
+
 
 @enduml
