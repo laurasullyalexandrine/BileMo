@@ -22,10 +22,28 @@ class ClientUserFixtures extends Fixture
     {
         $faker = Factory::create('fr_FR');
 
+        $clientOne = new Client();
+        $clientOne->setName("All The Smart")
+            ->setSlug(strtolower($this->slugger->slug($clientOne->getName())))
+            ->setEmail("fransk-sinatra@allthesmart.com")
+            ->setPhone('0644251233')
+            ->setRoles(["ROLE_ADMIN"])
+            ->setSiret("XXX XXX XXX XXXXX")
+            ->setCreatedAt(new \DateTimeImmutable())
+            ->setPassword(
+                $this->hasher->hashPassword(
+                    $clientOne,
+                    'admindatafixtures'
+                )
+            );
+
+        $manager->persist($clientOne);
+
         $client = new Client();
         $client->setName("High End Smart")
             ->setSlug(strtolower($this->slugger->slug($client->getName())))
             ->setEmail("gracekelly@high-end-smart.com")
+            ->setPhone('0609080706')
             ->setRoles(["ROLE_ADMIN"])
             ->setSiret("XXX XXX XXX XXXXX")
             ->setCreatedAt(new \DateTimeImmutable())
