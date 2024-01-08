@@ -6,12 +6,13 @@ actor "client" as client #Orange
 
 rectangle BileMo {
 
-  usecase "Etre authentifier" as UC1
-  usecase "Consulter la liste des téléphones" as UC2
-  usecase "Consulter un téléphone" as UC3
-  usecase "Ajouter un utilisateur" as UC4
-  usecase "Modifier un utilisateur" as UC5
-  usecase "Supprimer un utilisateur" as UC6
+  usecase "Se connecter à l'API" as UC1
+  usecase "Etre authentifier avec JWT" as UC2
+  usecase "Consulter la liste des téléphones" as UC3
+  usecase "Consulter un téléphone" as UC4
+  usecase "Ajouter un utilisateur" as UC5
+  usecase "Modifier un utilisateur" as UC6
+  usecase "Supprimer un utilisateur" as UC7
 
 }
 
@@ -21,5 +22,6 @@ client --> UC3
 client --> UC4
 client --> UC5
 client --> UC6
+client --> UC7
 
 @enduml
