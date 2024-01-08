@@ -86,7 +86,6 @@ class Phone
     private Collection $images;
 
     #[ORM\ManyToOne(inversedBy: 'phones', cascade: ['persist'])]
-    // #[Exclude()]
     private ?Brand $brand = null;
 
     public function __construct()

@@ -56,7 +56,7 @@ class ClientUserFixtures extends Fixture
 
         $manager->persist($client);
 
-        // Créer un numéro de portable aléatoire
+        // Create a random mobile number
         $randomPhoneNumbers = str_pad(rand(0, 99999999), 8, '0', STR_PAD_LEFT);
         $phoneNumber = "06" . $randomPhoneNumbers;
         $option = ['cost' => User::HASH_COST];

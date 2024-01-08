@@ -2,7 +2,6 @@
 
 namespace App\DataFixtures;
 
-use Faker\Factory;
 use App\Entity\Image;
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;

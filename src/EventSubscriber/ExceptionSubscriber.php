@@ -14,16 +14,16 @@ class ExceptionSubscriber implements EventSubscriberInterface
     {
         $exception = $event->getThrowable();
 
-        // Vérifie si l'evenement en cours est bien une exception HTTP (404)
+        // Checks if the current event is indeed an HTTP exception (404)
         if ($exception instanceof HttpException) {
             $data = [
                 'status' => $exception->getStatusCode(),
                 'message' => $exception->getMessage(),
             ];
-            // Retourner le tableau d'erreur au format Json
+            // Return error array in Json format
             $event->setResponse(new JsonResponse($data));
         } else {
-            // Si ce n'est pas une erreur HTTP afficher le code 500 et le message
+            // If it is not an HTTP error display the code 500 and the message
             $data = [
                 'status' => 500,
                 'message' => $exception->getMessage(),
