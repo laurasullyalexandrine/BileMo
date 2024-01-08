@@ -4,6 +4,7 @@
 !include UserManager.puml
 !include Brand.puml
 !include Client.puml
+!include ClientManager.puml
 !include Image.puml 
 
 Class Phone {
@@ -37,9 +38,10 @@ Class Phone {
 
 
 Client "1"-* User: create <
-Brand "1"-* Phone: have <>
+Phone *--"1" Brand: have <>
 Phone "1"-* Image: have <
 
+ClientManager - Client: exec
 User - UserManager: exec
 
 

@@ -1,0 +1,10 @@
+@startuml ClientManager
+
+Class ClientManager {
+
+    + login()
+    + authenticate(JWT)
+    
+    }
+
+@enduml
