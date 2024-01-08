@@ -10,9 +10,10 @@ rectangle BileMo {
   usecase "Etre authentifier avec JWT" as UC2
   usecase "Consulter la liste des téléphones" as UC3
   usecase "Consulter un téléphone" as UC4
-  usecase "Ajouter un utilisateur" as UC5
-  usecase "Modifier un utilisateur" as UC6
-  usecase "Supprimer un utilisateur" as UC7
+  usecase "Consulter la liste de ses utilisateurs" as UC5
+  usecase "Ajouter un utilisateur" as UC6
+  usecase "Modifier un utilisateur" as UC7
+  usecase "Supprimer un utilisateur" as UC8
 
 }
 
@@ -23,5 +24,6 @@ client --> UC4
 client --> UC5
 client --> UC6
 client --> UC7
+client --> UC8
 
 @enduml
