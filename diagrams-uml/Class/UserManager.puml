@@ -3,8 +3,8 @@
 Class UserManager {
 
     + addUser()
-    + updateUser(User user)
-    + deleteUser(User user)
+    + updateUser(Client client User user)
+    + deleteUser(Client client User user)
     
     }
 
