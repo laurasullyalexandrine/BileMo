@@ -10,7 +10,7 @@ entity Phone as Phone #Pink
 
 database BileMo as BileMo #LightYellow
 
-Client -> BileMo: demander JWT
+Client -> BileMo: demander JWT connexion
 alt cas réussi
 BileMo -> BileMo: générer JWT
 BileMo -> Client: retourner le JWT
@@ -23,14 +23,19 @@ BileMo-> Client: échec de l'authentification
 Client -> Phone: consulter liste des téléphones
 Phone -> Client: afficher tous les téléphones
 
+Client -> Phone: consulter le detail d'un téléphone
+Phone -> Client: afficher le téléphone trouvé
+else page non trouvée 404
+Phone -> Client: Le téléphone demandé n'existe pas
+
 Client -> User: ajout d'un utilisateur
 User -> Client: valider ajout utilisateur
-else échec ajout utilisateur
+else échec ajout utilisateur 500
 Client -> User: l'email existe déjà sur l'API BileMo
 
 Client -> User: consulter fiche utilisateur
-User -> Client: afficher utilisateur
-else 404
+User -> Client: afficher fiche utilisateur
+else page non trouvée 404
 Client -> User: cette utilisateur n'existe pas
 
 Client -> User: supprimer un utilisateur
