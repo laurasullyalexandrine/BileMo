@@ -27,7 +27,7 @@ Class Phone {
 }
 
 
-Client "1"-* User: create <
+Client "1"--* User: create >
 Phone *--"1" Brand: have <>
 Phone "1"-* Image: have <
 
