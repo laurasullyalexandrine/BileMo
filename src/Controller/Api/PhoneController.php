@@ -22,7 +22,8 @@ class PhoneController extends AbstractController
 {
     public function __construct(
         private SerializerInterface $serializer,
-        private VersioningService $versioningService
+        private VersioningService $versioningService,
+        private TagAwareCacheInterface $cache,
     ) {
     }
 
@@ -64,19 +65,19 @@ class PhoneController extends AbstractController
     #[Route('/phones', name: 'phones', methods: ['GET'])]
     public function getAllPhones(
         PhoneRepository $phoneRepository,
-        Request $request,
-        TagAwareCacheInterface $cache
+        Request $request
     ): JsonResponse {
 
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('limit', PhoneRepository::DEFAULT_LIMIT);
 
         // Caching
-        $idCache =  "getAllPhones-p-" . $page.'l-' . $limit;
-        $phones = $cache->get($idCache, function (ItemInterface $item) use ($phoneRepository, $page) {
+        $idCache =  "getAllPhones-p-" . $page .'l-' . $limit;
+
+        $phones = $this->cache->get($idCache, function (ItemInterface $item) use ($phoneRepository, $page, $limit) {
             echo ("PAS ENCORE EN CACHE");
             $item->tag("phonesCache");
-            return $phoneRepository->findAllWithPagination($page);
+            return $phoneRepository->findAllWithPagination($page, $limit);
         });
 
         // Retrieve API version
@@ -91,6 +92,9 @@ class PhoneController extends AbstractController
         // Edit version
         $context->setVersion($version);
 
+        // Empty cache
+        $this->cache->invalidateTags(["usersCache"]);
+        
         $jsonPhones = $this->serializer->serialize($phones, 'json', $context);
 
         return new JsonResponse($jsonPhones, Response::HTTP_OK, [], true);
