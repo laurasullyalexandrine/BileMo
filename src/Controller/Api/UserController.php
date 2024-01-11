@@ -112,6 +112,9 @@ class UserController extends AbstractController
         // Edit version
         $context->setVersion($version);
 
+        // Empty cache
+        $this->cache->invalidateTags(["usersCache"]);
+        
         $jsonUsers = $this->serializer->serialize($users, 'json', $context);
 
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
