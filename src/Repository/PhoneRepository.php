@@ -17,12 +17,13 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class PhoneRepository extends ServiceEntityRepository
 {
+    const DEFAULT_LIMIT = 10;
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Phone::class);
     }
 
-    public function findAllWithPagination(int $page, int $maxResult = 10): ?array
+    public function findAllWithPagination(int $page, int $maxResult = self::DEFAULT_LIMIT): ?array
     {
         $result = [];
 

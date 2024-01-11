@@ -69,10 +69,12 @@ class PhoneController extends AbstractController
     ): JsonResponse {
 
         $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', PhoneRepository::DEFAULT_LIMIT);
 
         // Caching
-        $idCache =  "getAllPhones-" . $page;
+        $idCache =  "getAllPhones-p-" . $page.'l-' . $limit;
         $phones = $cache->get($idCache, function (ItemInterface $item) use ($phoneRepository, $page) {
+            echo ("PAS ENCORE EN CACHE");
             $item->tag("phonesCache");
             return $phoneRepository->findAllWithPagination($page);
         });

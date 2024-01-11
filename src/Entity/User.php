@@ -82,7 +82,7 @@ class User
     private ?\DateTimeImmutable $updated_at = null;
 
     #[ORM\ManyToOne(inversedBy: 'users', cascade: ['persist'])]
-    #[Exclude()]
+    // #[Exclude()]
     private ?Client $client = null;
 
     public function __construct()
