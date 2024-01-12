@@ -75,7 +75,6 @@ class PhoneController extends AbstractController
         $idCache =  "getAllPhones-p-" . $page .'l-' . $limit;
 
         $phones = $this->cache->get($idCache, function (ItemInterface $item) use ($phoneRepository, $page, $limit) {
-            echo ("PAS ENCORE EN CACHE");
             $item->tag("phonesCache");
             return $phoneRepository->findAllWithPagination($page, $limit);
         });
@@ -92,8 +91,6 @@ class PhoneController extends AbstractController
         // Edit version
         $context->setVersion($version);
 
-        // Empty cache
-        $this->cache->invalidateTags(["usersCache"]);
         
         $jsonPhones = $this->serializer->serialize($phones, 'json', $context);
 
