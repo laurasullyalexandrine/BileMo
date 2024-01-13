@@ -16,7 +16,7 @@ use JMS\Serializer\Annotation\Exclude;
  *      "self",
  *      href = @Hateoas\Route(
  *         "api_user",
- *          parameters = {"slug" = "expr(object.getClient().getSlug())", "id" = "expr(object.getId())"}
+ *          parameters = {"id" = "expr(object.getId())"}
  *      ),
  * )
  * 
@@ -25,7 +25,7 @@ use JMS\Serializer\Annotation\Exclude;
  *      "update",
  *      href = @Hateoas\Route(
  *         "api_update_user",
- *          parameters = {"slug" = "expr(object.getClient().getSlug())", "id" = "expr(object.getId())"}
+ *          parameters = {"id" = "expr(object.getId())"}
  *      ),
  * )
  * 
@@ -34,7 +34,7 @@ use JMS\Serializer\Annotation\Exclude;
  *      "delete",
  *      href = @Hateoas\Route(
  *         "api_delete_user",
- *          parameters = {"slug" = "expr(object.getClient().getSlug())", "id" = "expr(object.getId())"}
+ *          parameters = {"id" = "expr(object.getId())"}
  *      ),
  * )
  * 

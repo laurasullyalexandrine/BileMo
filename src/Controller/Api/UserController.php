@@ -11,20 +11,28 @@ use App\Repository\ClientRepository;
 use JMS\Serializer\SerializerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializationContext;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use App\Service\CheckUserWithTokenService;
 use Symfony\Contracts\Cache\ItemInterface;
+use App\Service\CheckClientWithTokenService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+
 use Symfony\Component\Routing\Annotation\Route;;
+
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTDecodeFailureException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Nelmio\ApiDocBundle\Annotation\Model;
+use Lexik\Bundle\JWTAuthenticationBundle\TokenExtractor\AuthorizationHeaderTokenExtractor;
 
 #[Route('/api', name: 'api_', methods: ['GET'])]
 class UserController extends AbstractController
@@ -39,6 +47,8 @@ class UserController extends AbstractController
         private SerializerInterface $serializer,
         private VersioningService $versioningService,
         private TokenStorageInterface $token,
+        private JWTTokenManagerInterface $jwtManager,
+        private CheckClientWithTokenService $checkClientWithTokenService
     ) {
     }
 
@@ -77,14 +87,15 @@ class UserController extends AbstractController
      * @param UserRepository $userRepository
      * @return JsonResponse
      */
-    #[Route('/users/{slug}', name: 'users', methods: ['GET'])]
+    #[Route('/users', name: 'users', methods: ['GET'])]
     public function getAllUsers(
-        Client $client,
         Request $request,
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        TokenInterface $tokenInterface
     ): JsonResponse {
 
-        
+        $client = $this->clientRepository->findOneByEmail($this->checkClientWithTokenService->getClient($tokenInterface)["username"]);
+
         // Road access control
         if ($client !== $this->token->getToken()->getUser()) {
             throw new NotFoundHttpException("Aucune donnée trouvée.");
@@ -95,7 +106,7 @@ class UserController extends AbstractController
         $limit = $request->query->getInt('limit', UserRepository::DEFAULT_LIMIT);
 
         // Create cache name
-        $idCache =  "getAllUsers-p-" . $page .'l-' . $limit;
+        $idCache =  "getAllUsers-p-" . $page . 'l-' . $limit;
 
         // Caching data
         $users = $this->cache->get($idCache, function (ItemInterface $item) use ($userRepository, $client, $page, $limit) {
@@ -111,23 +122,25 @@ class UserController extends AbstractController
 
         // Edit version
         $context->setVersion($version);
-        
+
         $jsonUsers = $this->serializer->serialize($users, 'json', $context);
 
         return new JsonResponse($jsonUsers, Response::HTTP_OK, [], true);
     }
-    
 
-    #[Route('/users/{slug}', name: 'create_user', methods: ['POST'])]
+
+    #[Route('/users', name: 'create_user', methods: ['POST'])]
     public function createUser(
         Request $request,
-        Client $client
+        TokenInterface $tokenInterface
     ): JsonResponse {
 
-        if ($client !== $this->token->getToken()->getUser()) {
-            throw new AccessDeniedHttpException("Accès refusé: Vous n'êtes pas autorisé à effectuer cette action.");
-        }
+        $client = $this->clientRepository->findOneByEmail($this->checkClientWithTokenService->getClient($tokenInterface)["username"]);
 
+        // Road access control
+        if ($client !== $this->token->getToken()->getUser()) {
+            throw new NotFoundHttpException("Aucune donnée trouvée.");
+        }
         // Retrieve data received from the query
         $newUser = $this->serializer->deserialize($request->getContent(), User::class, 'json');
 
@@ -167,23 +180,25 @@ class UserController extends AbstractController
         $jsonUser = $this->serializer->serialize($user, 'json', $context);
 
         // Add verification url
-        $location = $this->urlGenerator->generate('api_user', ['slug' => $client->getSlug(), 'id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
+        $location = $this->urlGenerator->generate('api_user', ['id' => $user->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
+        // Empty cache
+        $this->cache->invalidateTags(["usersCache"]);
+        
         return new JsonResponse($jsonUser, Response::HTTP_CREATED, ["Location" => $location], true);
     }
 
 
-    #[Route('/users/{slug}/{id}', name: 'user', methods: ['GET'])]
+    #[Route('/users/{id}', name: 'user', methods: ['GET'])]
     public function getOneUser(
-        Request $request,
+        TokenInterface $tokenInterface,
         User $user,
         SerializerInterface $serializer,
     ): JsonResponse {
 
-        $attributes = $request->attributes;
-        $slug = $attributes->get('slug');
-        $client = $this->clientRepository->findOneBySlug($slug);
+        $client = $this->clientRepository->findOneByEmail($this->checkClientWithTokenService->getClient($tokenInterface)["username"]);
 
+        // Road access control
         if ($client !== $this->token->getToken()->getUser()) {
             throw new NotFoundHttpException("Aucune donnée trouvée.");
         }
@@ -200,20 +215,21 @@ class UserController extends AbstractController
     }
 
 
-    #[Route('/users/{slug}/{id}', name: 'update_user', methods: ['PUT'])]
+    #[Route('/users/{id}', name: 'update_user', methods: ['PUT'])]
     public function updateUser(
+        TokenInterface $tokenInterface,
         Request $request,
         SerializerInterface $serializer,
         User $user
     ): JsonResponse {
 
-        $attributes = $request->attributes;
-        $slug = $attributes->get('slug');
-        $client = $this->clientRepository->findOneBySlug($slug);
-        
+        $client = $this->clientRepository->findOneByEmail($this->checkClientWithTokenService->getClient($tokenInterface)["username"]);
+
+        // Road access control
         if ($client !== $this->token->getToken()->getUser()) {
-            throw new AccessDeniedHttpException("Accès refusé: Vous n'êtes pas autorisé à effectuer cette action.");
+            throw new NotFoundHttpException("Aucune donnée trouvée.");
         }
+
         // Retrieve data received from the query
         $newUser = $serializer->deserialize($request->getContent(), User::class, 'json');
 
@@ -261,17 +277,17 @@ class UserController extends AbstractController
     }
 
 
-    #[Route('/users/{slug}/{id}', name: 'delete_user', methods: ['DELETE'])]
+    #[Route('/users/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(
-        Request $request,
-        User $user): JsonResponse
-    {
-        $attributes = $request->attributes;
-        $slug = $attributes->get('slug');
-        $client = $this->clientRepository->findOneBySlug($slug);
-        
+        TokenInterface $tokenInterface,
+        User $user
+    ): JsonResponse {
+
+        $client = $this->clientRepository->findOneByEmail($this->checkClientWithTokenService->getClient($tokenInterface)["username"]);
+
+        // Road access control
         if ($client !== $this->token->getToken()->getUser()) {
-            throw new AccessDeniedHttpException("Accès refusé: Vous n'êtes pas autorisé à effectuer cette action.");
+            throw new NotFoundHttpException("Aucune donnée trouvée.");
         }
 
         $this->cache->invalidateTags(["usersCache"]);
